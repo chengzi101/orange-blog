@@ -5,10 +5,10 @@
   <div class="page-template-container">
     <h1 class="page-title-header">工具箱</h1>
     <div class="page-template-content markdown-body">
-      <p>远程工具安装包，按需下载。</p>
+      <p>常用在线工具与远程工具安装包，按需使用。</p>
     </div>
   </div>
-  <ul class="orange-project-list toolbox-grid" aria-label="远程工具下载">
+  <ul class="orange-project-list toolbox-grid" aria-label="常用工具">
     {% for tool in tools %}
     <li class="orange-project-card toolbox-card">
       <div class="toolbox-card-heading">
@@ -19,6 +19,14 @@
       <a class="toolbox-download" href="{{ url_for('toolbox_download', slug=tool.slug) }}" download="{{ tool.filename }}" data-no-pjax aria-label="下载{{ tool.title }} Windows 安装包"><i class="fa-solid fa-download" aria-hidden="true"></i> 下载安装包</a>
     </li>
     {% endfor %}
+    <li class="orange-project-card toolbox-card">
+      <div class="toolbox-card-heading">
+        <i class="toolbox-icon fa-regular fa-file-pdf" style="display:flex;align-items:center;justify-content:center;font-size:36px;color:#d32f2f" aria-hidden="true"></i>
+        <div><h2>pdf万能工具</h2><p class="toolbox-meta">PDF24 · 在线工具</p></div>
+      </div>
+      <p class="toolbox-filename">PDF 合并、拆分、压缩、转换等常用工具。</p>
+      <a class="toolbox-download toolbox-link" href="https://tools.pdf24.org/zh/all-tools" target="_blank" rel="noopener noreferrer" data-no-pjax aria-label="打开pdf万能工具（新标签页）"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> 打开工具</a>
+    </li>
   </ul>
 </div>
 {% endblock %}
