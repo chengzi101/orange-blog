@@ -92,3 +92,9 @@ git diff --cached --name-only
 本仓库暂不包含自动部署。GitHub 推送不会自动修改线上服务。`deploy/` 仅是维护任务模板，不是完整生产环境配置；配置生产环境或迁移既有数据应另行审查。
 
 `README_读者互动.md` 和 `AUTH_SECURITY.md` 保留原有专题记录，其中的历史部署命令与旧限制不一定反映所有后续改动；当前行为以源码和本 README 的启动说明为准。
+
+## 许可证
+
+除第三方内容及其衍生修改外，本项目由 chengzi101 原创且未另行声明许可证的代码采用 [MIT License](LICENSE)，版权声明为 `Copyright (c) 2026 chengzi101`。
+
+第三方代码、主题、字体及其他资源保留各自原有许可；本项目的 MIT 许可证不对这些内容重新授权。其中 Redefine 主题及其衍生修改遵循[原有 GNU GPL v3 许可证](static/redefine/LICENSE)。使用、修改或分发时，应同时遵守所涉及第三方组件的许可条件。
