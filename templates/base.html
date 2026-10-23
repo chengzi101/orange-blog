@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/orange-favicon-32-20261019.png">
+<link rel="icon" type="image/x-icon" href="/static/orange-favicon-20261019.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/orange-favicon-180-20261019.png">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Orange手记{% endblock %}</title>
+  <meta name="description" content="{% block description %}Orange手记，记录代码、模型与生活现场。{% endblock %}">
+  <meta name="theme-color" content="#f6f2eb">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}Orange手记{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}记录代码、模型与生活现场。{% endblock %}">
+  <meta property="og:url" content="{{ request.url }}">
+  {% if has_og_image %}<meta property="og:image" content="{{ url_for('static', filename='og.png', _external=True) }}">{% endif %}
+  <link rel="alternate" type="application/rss+xml" title="Orange手记 RSS" href="{{ url_for('feed') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='site.css', v='20261016-profile-peach') }}">
+  <script defer src="{{ url_for('static', filename='site.js', v='20260727-visitor-detail') }}"></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  {% block body %}{% endblock %}
+</body>
+</html>

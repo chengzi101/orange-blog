@@ -1,0 +1,19 @@
+{% extends "admin_base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/latex-workbench.css?v=20261020-1">{% endblock %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+ <div class="dashboard-title"><div><p>LATEX STUDIO</p><h1>LaTeX 工作台</h1></div></div>
+ <p class="lw-intro">你的私人排版空间。编辑源码、管理图片与参考文献，编译后直接预览 PDF。</p>
+ <form method="post" action="{{ url_for('latex_workbench.create') }}" class="lw-create">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>项目名称<input name="title" required maxlength="120" placeholder="例如：课程报告、研究笔记"></label>
+  <label>起始模板<select name="template"><option value="chinese">中文文章 · XeLaTeX</option><option value="english">英文文章 · XeLaTeX</option></select></label>
+  <button type="submit" class="primary-button">＋ 创建项目</button>
+ </form>
+ <div class="lw-projects">
+ {% for project in projects %}
+ <a class="lw-project-card" href="{{ url_for('latex_workbench.editor',pid=project.id) }}"><span class="lw-file-icon">T<span>E</span>X</span><h2>{{ project.title }}</h2><p>{{ project.file_count }} 个文件 · {{ project.engine }}</p><small>{{ project.updated_at|replace('T',' ')|truncate(19,True,'') }}</small><b>打开工作台 →</b></a>
+ {% else %}<p class="empty-state">创建第一个项目，或创建后导入现有 LaTeX 源码 ZIP。</p>{% endfor %}
+ </div>
+</main>
+{% endblock %}

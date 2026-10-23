@@ -1,0 +1,58 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+{% if request.args.get("view") == "analytics" %}
+<section class="simple-analytics">
+ <header class="simple-analytics-heading"><div><h1>数据统计</h1><p>查看博客最近的访问情况</p></div></header>
+ <div class="simple-metrics">
+  <article><span>今日访客</span><strong>{{ visitor_stats.today }}<small>人</small></strong></article>
+  <article><span>今日浏览</span><strong>{{ visitor_stats.today_views }}<small>次</small></strong></article>
+  <article><span>近 7 天访客</span><strong>{{ visitor_stats.seven_days }}<small>人</small></strong></article>
+ </div>
+ <section class="simple-panel"><div class="simple-panel-heading"><h2>近七天访问</h2><span>访客 / 浏览</span></div><div class="simple-trend">
+ {% for item in traffic[-7:] %}<div class="simple-trend-row"><time>{{ item.day[5:] }}</time><span class="simple-trend-track"><i style="width:{{ item.view_percent }}%"></i></span><span class="simple-trend-count">{{ item.visitors }} <b>/</b> {{ item.views }}</span></div>{% endfor %}
+ </div></section>
+ <section class="simple-panel"><div class="simple-panel-heading"><h2>热门文章</h2><span>近 30 天 · 前 5 项</span></div><div class="simple-popular">
+ {% for item in popular_articles %}<div><span class="simple-rank">{{ loop.index }}</span><span class="simple-page-label">{{ item.label }}</span><strong>{{ item.views }}<small>次浏览</small></strong></div>{% else %}<p class="simple-no-data">近 30 天暂无文章浏览记录。</p>{% endfor %}
+ </div></section>
+</section>
+{% else %}  <div class="dashboard-title"><div><p>CONTENT</p><h1>文章管理</h1></div><a class="primary-button" href="{{ url_for('admin_new') }}">＋ 新建文章</a></div>
+  <section class="stat-grid" aria-label="内容概览">
+    <article><span>全部文章</span><strong>{{ stats.total }}</strong></article>
+    <article><span>已发布</span><strong>{{ stats.published or 0 }}</strong></article>
+    <article><span>草稿</span><strong>{{ stats.drafts or 0 }}</strong></article>
+    <article><span>累计阅读</span><strong>{{ stats.views }}</strong></article>
+  </section>
+  <form class="admin-filters" method="get">
+    <input name="q" value="{{ query }}" placeholder="搜索标题、分类或标签">
+    <select name="status"><option value="">全部状态</option><option value="published" {% if status_filter == 'published' %}selected{% endif %}>已发布</option><option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>草稿</option></select>
+    <button type="submit">筛选</button>{% if query or status_filter %}<a href="{{ url_for('admin_dashboard') }}">清除</a>{% endif %}
+  </form>
+  {% if posts %}
+  <form id="bulk-post-form" method="post" action="{{ url_for('admin_posts_bulk_delete') }}" data-bulk-delete data-item-label="篇文章">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+  <div class="bulk-toolbar" data-bulk-toolbar="bulk-post-form">
+    <label class="bulk-select-all"><input type="checkbox" data-select-all><span>全选当前列表</span></label>
+    <span class="bulk-count" aria-live="polite">已选择 0 项</span>
+    <button class="bulk-delete-button" type="submit" form="bulk-post-form" data-bulk-submit disabled>批量删除</button>
+  </div>
+  {% endif %}
+  <div class="post-table">
+    {% for post in posts %}
+    <article class="admin-post">
+      <label class="select-control" title="选择《{{ post.title }}》"><input type="checkbox" name="selected_ids" value="{{ post.id }}" form="bulk-post-form" data-bulk-item><span class="sr-only">选择《{{ post.title }}》</span></label>
+      <div class="status {{ post.status }}">{{ '已发布' if post.status == 'published' else '草稿' }}</div>
+      <div class="admin-post-copy"><div>{% if post.is_featured %}<span class="featured-badge">精选</span>{% endif %}<span>{{ post.category }}</span></div><h2>{{ post.title }}</h2><p>/posts/{{ post.slug }} · 更新于 {{ post.updated_at|date_zh }} · {{ post.views }} 次阅读</p></div>
+      <div class="post-actions">
+        {% if post.status == 'published' %}<a href="{{ url_for('post_detail', slug=post.slug) }}" target="_blank">查看</a>{% endif %}
+        <a href="{{ url_for('admin_edit', post_id=post.id) }}">编辑</a>
+        <a href="{{ url_for('admin_revisions', post_id=post.id) }}">历史</a>
+        <form method="post" action="{{ url_for('admin_toggle', post_id=post.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button>{{ '转为草稿' if post.status == 'published' else '发布' }}</button></form>
+        <form method="post" action="{{ url_for('admin_delete', post_id=post.id) }}" onsubmit="return confirm('确定把这篇文章移入回收站吗？之后可以恢复。')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="danger">删除</button></form>
+      </div>
+    </article>
+    {% else %}<div class="empty-state">没有符合条件的文章。</div>{% endfor %}
+  </div>
+{% endif %}</main>
+{% endblock %}

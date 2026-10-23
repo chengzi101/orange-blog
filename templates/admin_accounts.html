@@ -1,0 +1,16 @@
+{% extends "admin_base.html" %}
+{% block title %}前台账户｜Orange 管理后台{% endblock %}
+{% block body %}
+<link rel="stylesheet" href="/static/accounts.css?v=20261019-owner-yellow-v1">
+<main class="admin-main accounts-main" id="admin-content">
+<div class="editor-title"><div><p>READER ACCOUNTS</p><h1>前台账户</h1></div><a href="{{ url_for('admin_owner') }}">博主账号绑定 ↗</a></div>
+<div class="accounts-stats"><span>全部 <strong>{{ stats.total }}</strong></span><span>正常 <strong>{{ stats.total-stats.disabled }}</strong></span><span>已停用 <strong>{{ stats.disabled }}</strong></span></div>
+<form method="get" class="accounts-search"><input name="q" value="{{ query }}" placeholder="搜索昵称或账户 ID" aria-label="搜索昵称或账户 ID" maxlength="100"><select name="status" aria-label="账户状态"><option value="">全部状态</option><option value="active" {% if status=='active' %}selected{% endif %}>正常</option><option value="disabled" {% if status=='disabled' %}selected{% endif %}>已停用</option></select><button class="primary-button">搜索</button><a href="{{ url_for('admin_accounts') }}">重置</a></form>
+<p class="accounts-muted">共 {{ total }} 个匹配账户 · 可修改昵称、重置密码、停用及恢复、退出所有登录。</p>
+<div class="accounts-list">
+{% for user in users %}<article class="account-row"><div class="account-avatar" aria-hidden="true">{{ user.nickname[:1] }}</div><div class="account-summary"><h2>{{ user.nickname }} {% if user.id==owner_id %}<span class="account-badge is-owner">博主</span>{% elif user.custom_title %}<span class="account-badge">{{ user.custom_title }}</span>{% endif %}</h2><p>ID {{ user.id }} · {% if user.disabled_at %}<span class="account-disabled">已停用</span>{% else %}正常{% endif %}</p><p>注册 {{ user.created_at|date_time_zh }}（北京时间）</p></div><div class="account-counts">评论 {{ user.comments }} · 点赞 {{ user.likes }}</div><a class="account-manage" href="{{ url_for('admin_account',user_id=user.id) }}">管理账户 →</a></article>
+{% else %}<div class="account-empty">没有找到匹配的账户。</div>{% endfor %}
+</div>
+<nav class="accounts-pagination" aria-label="账户分页">{% if page>1 %}<a href="{{ url_for('admin_accounts',q=query,status=status,page=page-1) }}">← 上一页</a>{% endif %}<span>第 {{ page }} / {{ pages }} 页</span>{% if page<pages %}<a href="{{ url_for('admin_accounts',q=query,status=status,page=page+1) }}">下一页 →</a>{% endif %}</nav>
+</main>
+{% endblock %}

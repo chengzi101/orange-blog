@@ -1,0 +1,25 @@
+{% extends "admin_base.html" %}
+{% block title %}访客｜Orange 管理后台{% endblock %}
+{% block body %}
+<main class="admin-main visitor-summary-page" id="admin-content">
+  <div class="dashboard-title">
+    <div><h1>访客</h1><p class="visitor-scope">{% if query %}搜索结果：{% endif %}共 <strong>{{ total }}</strong> 位已验证访客，累计 <strong>{{ total_visits }}</strong> 次访问</p>
+    <p class="visitor-scope">按浏览器会话去重；访问次数为已验证的页面浏览量，刷新也会计入。不同设备、清除 Cookie 或会话过期可能产生新编号。JavaScript 验证不等于真人认证。</p></div>
+  </div>
+  <section class="visitor-directory">
+    <div class="visitor-directory-toolbar"><h2>访客列表</h2>
+      <form class="visitor-directory-search" method="get" role="search"><input type="search" name="q" value="{{ query }}" aria-label="搜索访客" placeholder="搜索访客编号或设备"><button type="submit">搜索</button>{% if query %}<a href="{{ url_for('admin_visitors') }}">清除</a>{% endif %}</form>
+    </div>
+    <div class="visitor-directory-head" aria-hidden="true"><span>访客</span><span>最近访问</span><span>设备</span><span>访问次数</span></div>
+    {% for visit in visits %}
+    <article class="visitor-entry">
+      <div class="visitor-entry-identity"><span class="visitor-entry-dot" role="img" aria-label="已验证"></span><strong>{{ visit.visitor_code }}</strong></div>
+      <time datetime="{{ visit.visited_at }}">{{ visit.visited_at|date_time_zh }}</time>
+      <span class="visitor-entry-device">{{ visit.device }} · {{ visit.browser }}</span>
+      <span class="visitor-entry-count"><strong>{{ visit.visit_count }}</strong><small>次</small></span>
+    </article>
+    {% else %}<div class="visitor-directory-empty"><strong>{{ '没有找到相关访客' if query else '暂无已验证访客' }}</strong><p>{{ '试试其他访客编号或设备关键词。' if query else '已验证的访客会显示在这里。' }}</p></div>{% endfor %}
+    {% if total_pages > 1 %}<nav class="visitor-directory-pagination" aria-label="访客分页">{% if page > 1 %}<a href="{{ url_for('admin_visitors', page=page-1, q=query) }}">← 上一页</a>{% else %}<span></span>{% endif %}<span>{{ page }} / {{ total_pages }}</span>{% if page < total_pages %}<a href="{{ url_for('admin_visitors', page=page+1, q=query) }}">下一页 →</a>{% else %}<span></span>{% endif %}</nav>{% endif %}
+  </section>
+</main>
+{% endblock %}

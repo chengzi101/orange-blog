@@ -1,0 +1,13 @@
+{% extends "admin_base.html" %}
+{% block title %}快捷登录｜Orange 管理后台{% endblock %}
+{% block header %}{% endblock %}
+{% block body %}
+<main class="login-page" id="admin-content"><section class="login-card">
+  <h1>管理员快捷登录</h1>
+  <p>输入可信启动器提供的凭证。凭证 60 秒内有效，仅可使用一次。</p>
+  <form method="post" action="{{ url_for('admin_ticket_login') }}" class="stack-form">
+    <label>登录凭证<input type="password" name="ticket" required maxlength="128" autocomplete="off"></label>
+    <button class="primary-button" type="submit">进入后台</button>
+  </form><div class="login-footer"><a href="{{ url_for('admin_login') }}">使用密码登录</a></div>
+</section></main>
+{% endblock %}

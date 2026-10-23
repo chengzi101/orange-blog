@@ -1,0 +1,12 @@
+<div class="reader-account" data-reader-account>
+{% if reader_user %}
+  <a class="reader-profile-link" href="{{ url_for('profile.account') }}" title="个人中心" data-no-pjax><span class="reader-nickname" title="{{ reader_user.nickname }}">{{ reader_user.nickname }}</span></a>
+  <form action="{{ url_for('reader.logout') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf>
+    <input type="hidden" name="next" value="{{ reader_return }}">
+    <button type="submit">退出</button>
+  </form>
+{% else %}
+  <a href="{{ url_for('reader.login', next=reader_return) }}" data-no-pjax>登录</a><span aria-hidden="true">/</span><a href="{{ url_for('reader.register', next=reader_return) }}" data-no-pjax>注册</a>
+{% endif %}
+</div>

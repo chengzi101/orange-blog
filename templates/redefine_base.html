@@ -1,0 +1,265 @@
+<!doctype html><html lang="zh-CN" class="light"><head>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/orange-favicon-32-20261019.png">
+<link rel="icon" type="image/x-icon" href="/static/orange-favicon-20261019.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/orange-favicon-180-20261019.png">
+<meta charset="utf-8"><meta name="orange-visit-event" content="{{ session.get('pending_visit_event_id', '') }}"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="keywords" content="Hexo Theme Redefine"><meta name="description" content="{% block description %}Orange手记，记录代码与生活。{% endblock %}"><meta name="author" content="Orange"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preconnect" href="https://registry.npmmirror.com" crossorigin><meta name="robots" content="index,follow"><meta name="googlebot" content="index,follow"><meta name="revisit-after" content="1 days"><meta name="theme-color" content="#66CCFF"><title>{% block title %}Orange手记{% endblock %}</title><link rel="stylesheet" href="/static/redefine/fonts/Chillax/chillax.css"><link rel="stylesheet" href="/static/redefine/style.css?v=20261016"><link rel="stylesheet" href="/static/redefine/css/build/tailwind.css"><link rel="stylesheet" href="/static/redefine/fonts/GeistMono/geist-mono.css"><link rel="stylesheet" href="/static/redefine/fonts/Geist/geist.css"><link rel="stylesheet" href="/static/redefine/fontawesome/fontawesome.min.css"><link rel="stylesheet" href="/static/redefine/fontawesome/brands.min.css"><link rel="stylesheet" href="/static/redefine/fontawesome/solid.min.css"><link rel="stylesheet" href="/static/redefine/fontawesome/regular.min.css"><link rel="stylesheet" href="/static/redefine/fontawesome/sharp-solid.min.css"><meta name="generator" content="Hexo 7.3.0"><style>mjx-container[jax="SVG"] {
+
+  direction: ltr;
+
+}
+
+
+
+mjx-container[jax="SVG"] > svg {
+
+  overflow: visible;
+
+}
+
+
+
+mjx-container[jax="SVG"][display="true"] {
+
+  display: block;
+
+  text-align: center;
+
+  margin: 1em 0;
+
+}
+
+
+
+mjx-container[jax="SVG"][justify="left"] {
+
+  text-align: left;
+
+}
+
+
+
+mjx-container[jax="SVG"][justify="right"] {
+
+  text-align: right;
+
+}
+
+
+
+g[data-mml-node="merror"] > g {
+
+  fill: red;
+
+  stroke: red;
+
+}
+
+
+
+g[data-mml-node="merror"] > rect[data-background] {
+
+  fill: yellow;
+
+  stroke: none;
+
+}
+
+
+
+g[data-mml-node="mtable"] > line[data-line] {
+
+  stroke-width: 70px;
+
+  fill: none;
+
+}
+
+
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+
+  stroke-width: 70px;
+
+  fill: none;
+
+}
+
+
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+
+  stroke-dasharray: 140;
+
+}
+
+
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+
+  stroke-linecap: round;
+
+  stroke-dasharray: 0,140;
+
+}
+
+
+
+g[data-mml-node="mtable"] > svg {
+
+  overflow: visible;
+
+}
+
+
+
+[jax="SVG"] mjx-tool {
+
+  display: inline-block;
+
+  position: relative;
+
+  width: 0;
+
+  height: 0;
+
+}
+
+
+
+[jax="SVG"] mjx-tool > mjx-tip {
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+}
+
+
+
+mjx-tool > mjx-tip {
+
+  display: inline-block;
+
+  padding: .2em;
+
+  border: 1px solid #888;
+
+  font-size: 70%;
+
+  background-color: #F8F8F8;
+
+  color: black;
+
+  box-shadow: 2px 2px 5px #AAAAAA;
+
+}
+
+
+
+g[data-mml-node="maction"][data-toggle] {
+
+  cursor: pointer;
+
+}
+
+
+
+mjx-status {
+
+  display: block;
+
+  position: fixed;
+
+  left: 1em;
+
+  bottom: 1em;
+
+  min-width: 25%;
+
+  padding: .2em .4em;
+
+  border: 1px solid #888;
+
+  font-size: 90%;
+
+  background-color: #F8F8F8;
+
+  color: black;
+
+}
+
+
+
+foreignObject[data-mjx-xml] {
+
+  font-family: initial;
+
+  line-height: normal;
+
+  overflow: visible;
+
+}
+
+
+
+.MathJax path {
+
+  stroke-width: 3;
+
+}
+
+
+
+mjx-container[display="true"] {
+
+  overflow: auto hidden;
+
+}
+
+
+
+mjx-container[display="true"] + br {
+
+  display: none;
+
+}
+
+</style><link rel="stylesheet" href="/static/redefine/orange-theme.css?v=20261023-project-summary-v1"><link rel="alternate" type="application/rss+xml" href="/feed.xml"><script defer src="/static/redefine/orange-theme.js?v=20261020-archive-dismiss-v1"></script>{% raw %}<style>
+
+#orange-preloader{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:#fff;color:#111;opacity:1;transition:opacity .28s ease;pointer-events:none}
+
+html.orange-loading #orange-preloader{display:flex}
+
+#orange-preloader span{font-family:Chillax-Variable,"Segoe UI",sans-serif;font-size:2.4rem;font-weight:500;letter-spacing:-1px;animation:orange-loading-breathe 1.25s ease-in-out infinite}
+
+html.orange-loading{overflow:hidden}
+
+#orange-preloader.orange-leaving{opacity:0}
+
+html.dark #orange-preloader{background:#202124;color:#fff}
+
+@keyframes orange-loading-breathe{50%{opacity:.45}}
+
+@media(max-width:600px){#orange-preloader span{font-size:2rem}}
+
+@media(prefers-reduced-motion:reduce){#orange-preloader{transition:none}#orange-preloader span{animation:none}}
+
+</style><script>
+
+(()=>{const root=document.documentElement;root.classList.add('orange-loading');
+
+try{if(localStorage.getItem('orange-theme')==='dark'){root.classList.remove('light');root.classList.add('dark')}}catch{}
+
+const started=performance.now();let leaving=false;
+
+function finish(){if(leaving)return;leaving=true;const remaining=Math.max(0,650-(performance.now()-started));setTimeout(()=>{const el=document.getElementById('orange-preloader');if(el)el.classList.add('orange-leaving');setTimeout(()=>{root.classList.remove('orange-loading');el?.remove()},300)},remaining)}
+
+window.addEventListener('load',finish,{once:true});setTimeout(finish,4500);
+
+window.addEventListener('pageshow',event=>{if(event.persisted){root.classList.remove('orange-loading');document.getElementById('orange-preloader')?.remove()}});
+
+})();
+
+</script>{% endraw %}<link rel="stylesheet" href="/static/redefine/community.css?v=20261022-project-community-v1">{% block head %}{% endblock %}</head><body class="light-mode {% block body_class %}{% endblock %}"><div id="orange-preloader" role="status" aria-live="polite" aria-label="页面加载中"><span>Loading...</span></div><main class="page-container" id="swup"><div class="home-banner-background transition-fade fixed top-0 left-0 w-screen h-screen scale-125 sm:scale-110 box-border will-change-transform bg-cover"><img src="/static/redefine/orange-public-light-20261019.png" data-public-bg="light" alt="" aria-hidden="true" class="w-full h-full object-cover dark:hidden"> <img src="/static/redefine/orange-public-dark-20261019.png" data-public-bg="dark" alt="" aria-hidden="true" class="w-full h-full object-cover hidden dark:block"></div>{% block hero %}{% endblock %}<div class="main-content-container flex flex-col justify-between min-h-dvh"><div class="main-content-header"><header class="navbar-container px-6 md:px-12"><div class="navbar-content transition-navbar{% if request.endpoint == "home" %} has-home-banner{% endif %}"><div class="left"><a class="logo-image h-8 w-8 sm:w-10 sm:h-10 mr-3" href="/"><img src="/static/orange-avatar-20261017.png" class="w-full h-full rounded-xs"> </a><a class="logo-title" href="/"><h1>Orange手记</h1></a></div><div class="right"><div class="desktop"><ul class="navbar-list"><li class="navbar-item"><a class="active" href="/"><i class="fa-regular fa-house fa-fw"></i> 首页</a></li><li class="navbar-item orange-archive-menu"><a class="has-dropdown" href="#"><i class="fa-regular fa-archive fa-fw"></i> 归档 <i class="fa-solid fa-chevron-down fa-fw"></i></a><ul class="sub-menu"><li><a href="/archives">文章</a></li><li><a href="/categories">分类</a></li><li><a href="/tags">标签</a></li></ul></li><li class="navbar-item"><a href="/projects"><i class="fa-regular fa-bookmark fa-fw"></i> 项目</a></li><li class="navbar-item"><a href="/toolbox"><i class="fa-solid fa-toolbox fa-fw" aria-hidden="true"></i> 工具箱</a></li><li class="navbar-item"><a href="/about"><i class="fa-regular fa-user fa-fw"></i> 关于</a></li><li class="navbar-item reader-navbar-item">{% include "_reader_account.html" %}</li><li class="navbar-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></li></ul></div><div class="mobile"><div class="icon-item search search-popup-trigger"><i class="fa-solid fa-magnifying-glass"></i></div><div class="icon-item navbar-bar"><div class="navbar-bar-middle"></div></div></div></div></div><div class="navbar-drawer h-dvh w-full absolute top-0 left-0 bg-background-color flex flex-col justify-between"><ul class="drawer-navbar-list flex flex-col px-4 justify-center items-start"><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active" href="/"><span>首页 </span><i class="fa-regular fa-house fa-sm fa-fw"></i></a></li><li class="drawer-navbar-item-sub text-base my-1.5 flex flex-col w-full"><div class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary cursor-pointer text-2xl font-semibold group border-b border-border-color hover:border-primary w-full" navbar-data-toggle="submenu-Archives"><span>归档 </span><i class="fa-solid fa-chevron-right fa-sm fa-fw transition-all"></i></div><div class="flex-col items-start px-2 py-2 hidden" data-target="submenu-Archives"><div class="drawer-navbar-item text-base flex flex-col justify-center items-start hover:underline active:underline hover:underline-offset-1 rounded-3xl"><a class="text-third-text-color text-xl" href="/archives">文章</a></div><div class="drawer-navbar-item text-base flex flex-col justify-center items-start hover:underline active:underline hover:underline-offset-1 rounded-3xl"><a class="text-third-text-color text-xl" href="/categories">分类</a></div><div class="drawer-navbar-item text-base flex flex-col justify-center items-start hover:underline active:underline hover:underline-offset-1 rounded-3xl"><a class="text-third-text-color text-xl" href="/tags">标签</a></div></div></li><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full" href="/projects"><span>项目 </span><i class="fa-regular fa-bookmark fa-sm fa-fw"></i></a></li><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full" href="/toolbox"><span>工具箱 </span><i class="fa-solid fa-toolbox fa-sm fa-fw"></i></a></li><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full" href="/about"><span>关于 </span><i class="fa-regular fa-user fa-sm fa-fw"></i></a></li><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active" href="/tags"><span>Tags</span> <i class="fa-regular fa-tags fa-sm fa-fw"></i></a></li><li class="drawer-navbar-item text-base my-1.5 flex flex-col w-full"><a class="py-1.5 px-2 flex flex-row items-center justify-between gap-1 hover:!text-primary active:!text-primary text-2xl font-semibold group border-b border-border-color hover:border-primary w-full active" href="/categories"><span>Categories</span> <i class="fa-regular fa-folder fa-sm fa-fw"></i></a></li></ul><div class="reader-drawer-account">{% include "_reader_account.html" %}</div><div class="statistics flex justify-around my-2.5"><a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/articles"><div class="number text-2xl sm:text-xl text-second-text-color font-semibold">{{ theme_stats.tags }}</div><div class="label text-third-text-color text-sm">标签</div></a><a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/articles"><div class="number text-2xl sm:text-xl text-second-text-color font-semibold">{{ theme_stats.categories }}</div><div class="label text-third-text-color text-sm">分类</div></a><a class="item tag-count-item flex flex-col justify-center items-center w-20" href="/archives"><div class="number text-2xl sm:text-xl text-second-text-color font-semibold">{{ theme_stats.posts }}</div><div class="label text-third-text-color text-sm">文章</div></a></div></div><div class="window-mask"></div></header></div><div class="main-content-body transition-fade-up" id="main-content">{% block content %}{% endblock %}</div><div class="main-content-footer"><footer class="footer"><div class="footer-container"><p>© {{ current_year }} Orange手记</p><p>共 {{ theme_stats.posts }} 篇文章</p><div class="orange-filing-row">{% include "_filing_links.html" %}</div><p>主题 <a href="https://github.com/EvanNotFound/hexo-theme-redefine">Redefine v2.9.0</a> · Flask CMS</p></div></footer></div></div><div class="right-side-tools-container"><nav class="orange-social-shortcuts" aria-label="社交平台"><a class="orange-social-icon" href="https://space.bilibili.com/433158651?spm_id_from=333.1007.0.0" target="_blank" rel="noopener noreferrer" aria-label="哔哩哔哩" title="哔哩哔哩"><i class="fa-brands fa-bilibili" aria-hidden="true"></i></a><a class="orange-social-icon" href="https://github.com/chengzi101" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"><i class="fa-brands fa-github" aria-hidden="true"></i></a><span class="orange-social-contact" tabindex="0" aria-label="微信二维码" aria-describedby="orange-wechat-qr"><span class="orange-social-icon" role="img" aria-label="微信"><i class="fa-brands fa-weixin" aria-hidden="true"></i></span><span class="orange-social-qr" id="orange-wechat-qr" role="tooltip"><img src="/static/social/wechat-contact.jpg?v=20261017" width="888" height="1134" alt="Orange 的微信好友二维码" decoding="async"></span></span><span class="orange-social-contact" tabindex="0" aria-label="QQ二维码" aria-describedby="orange-qq-qr"><span class="orange-social-icon" role="img" aria-label="QQ"><i class="fa-brands fa-qq" aria-hidden="true"></i></span><span class="orange-social-qr" id="orange-qq-qr" role="tooltip"><img src="/static/social/qq-contact.jpg?v=20261017" width="981" height="1728" alt="Orange 的 QQ 好友二维码" decoding="async"></span></span></nav><div class="side-tools-container"><ul class="hidden-tools-list"><li class="right-bottom-tools tool-font-adjust-plus flex justify-center items-center"><i class="fa-regular fa-magnifying-glass-plus"></i></li><li class="right-bottom-tools tool-font-adjust-minus flex justify-center items-center"><i class="fa-regular fa-magnifying-glass-minus"></i></li><li class="right-bottom-tools tool-dark-light-toggle flex justify-center items-center"><i class="fa-regular fa-moon"></i></li><li class="right-bottom-tools tool-scroll-to-bottom flex justify-center items-center"><i class="fa-regular fa-arrow-down"></i></li></ul><ul class="visible-tools-list"><li class="right-bottom-tools toggle-tools-list flex justify-center items-center"><i class="fa-regular fa-cog fa-spin"></i></li><li class="right-bottom-tools tool-scroll-to-top flex justify-center items-center"><i class="arrow-up fas fa-arrow-up"></i> <span class="percent"></span></li></ul></div></div><div class="search-pop-overlay" id="orange-search" role="dialog" aria-modal="true" aria-label="搜索文章"><div class="popup search-popup"><div class="search-header"><span class="search-input-field-pre"><i class="fa-solid fa-keyboard"></i></span><div class="search-input-container"><input class="search-input" placeholder="站内搜索您需要的内容..." aria-label="搜索文章" type="search"></div><button class="popup-btn-close" type="button" aria-label="关闭搜索"><i class="fa-solid fa-times"></i></button></div><div id="search-result"><p class="search-hint">输入关键词搜索文章</p></div></div></div><div class="image-viewer-container" id="orange-lightbox" role="dialog" aria-modal="true" aria-label="图片预览"><button class="image-viewer-close" aria-label="关闭预览">×</button><div class="image-viewer-frame"><img alt=""></div></div></main><dialog class="reader-login-dialog" id="reader-login-dialog" aria-labelledby="reader-login-title"><h2 id="reader-login-title">先登录，再一起交流</h2><p>登录后即可点赞和发表评论。注册只需昵称和密码。</p><div class="reader-dialog-actions"><button type="button" data-reader-dialog-close>继续阅读</button><a class="reader-primary" data-reader-login-link data-no-pjax href="/auth/login">去登录</a></div></dialog><dialog class="reader-login-dialog" id="reader-delete-dialog" aria-labelledby="reader-delete-title"><h2 id="reader-delete-title">删除这条评论？</h2><p>删除后无法恢复。其他人的跟评会保留，有跟评时原位置显示“该评论已删除”。</p><div class="reader-dialog-actions"><button type="button" data-cancel-delete autofocus>取消</button><button type="button" class="reader-primary reader-confirm-delete" data-confirm-delete>确认删除</button></div></dialog><script defer src="/static/redefine/community.js?v=20261022-project-community-v1"></script>{% block scripts %}{% endblock %}<script defer src="/static/redefine/scroll-blur.js?v=20261017-pjax-tokens"></script><script defer src="/static/redefine/codex-activity.js?v=20261017-total-on-leave"></script><script defer src="/static/redefine/orange-navigation.js?v=20261019-history-limit-v1"></script></body></html>

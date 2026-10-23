@@ -1,0 +1,30 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="editor-main settings-main" id="admin-content">
+ <div class="editor-title"><div><p>SITE PROFILE</p><h1>网站资料</h1></div><div><span class="form-state" data-form-state data-state="saved">已同步</span><a href="{{ url_for('admin_dashboard') }}">返回文章</a></div></div>
+ <form method="post" class="settings-form" data-track-changes>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section><div><p>首页 / 首屏</p><h2>首页副标题</h2><a href="/" target="_blank" rel="noopener">查看首页 ↗</a></div><div class="settings-fields">
+   <label>首页副标题<input name="hero_subtitle" value="{{ settings.hero_subtitle }}"><small>填写完整句子，标点由你自行输入。</small></label>
+  </div></section>
+  <section><div><p>首页 / 左侧资料卡</p><h2>侧栏介绍</h2><p>向下滚动至文章区，在左侧资料卡中显示。</p></div><div class="settings-fields">
+   <label>侧栏短句<input name="hero_kicker" value="{{ settings.hero_kicker }}"><small>显示在侧栏顶部“Orange手记”下方。</small></label>
+   <label>侧栏个人简介<textarea name="hero_intro" rows="4">{{ settings.hero_intro }}</textarea><small>显示在头像和名字下方。</small></label>
+  </div></section>
+  <section><div><p>关于页 / 个人介绍</p><h2>关于我的内容</h2><p>对应关于页头像下方的介绍标题和正文。</p><a href="/about" target="_blank" rel="noopener">查看关于页 ↗</a></div><div class="settings-fields">
+   <label>介绍标题<input name="about_title" value="{{ settings.about_title }}"></label>
+   <label>介绍正文<textarea name="about_body" rows="5">{{ settings.about_body }}</textarea></label>
+  </div></section>
+  <section><div><p>关于页 / 当前状态</p><h2>正在做什么</h2><p>对应关于页第二个内容区的标题与正文。</p></div><div class="settings-fields">
+   <label>状态区标题<input name="now_title" value="{{ settings.now_title }}"></label>
+   <label>状态区正文<textarea name="now_body" rows="4">{{ settings.now_body }}</textarea></label>
+  </div></section>
+  <section><div><p>关于页 / 技能与联系</p><h2>技能与联系方式</h2><p>显示在关于页的“技能与工具”及其下方。</p></div><div class="settings-fields">
+   <label>技能与工具<input name="skills" value="{{ settings.skills }}"><small>使用逗号分隔。</small></label>
+   <label>联系邮箱<input type="email" name="contact_email" value="{{ settings.contact_email }}" placeholder="可留空"><small>留空时不显示邮件联系入口。</small></label>
+   <label>GitHub 地址<input type="url" name="github_url" value="{{ settings.github_url }}" placeholder="https://github.com/..."><small>留空时不显示 GitHub 入口。</small></label>
+  </div></section>
+  <div class="settings-submit"><button class="primary-button" type="submit">保存网站资料</button></div>
+ </form>
+</main>
+{% endblock %}

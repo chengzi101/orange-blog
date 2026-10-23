@@ -1,0 +1,33 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+  <div class="dashboard-title">
+    <div><p>FIELD NOTES</p><h1>片段管理</h1></div>
+    <a class="primary-button" href="{{ url_for('admin_note_new') }}">＋ 新建片段</a>
+  </div>
+  {% if notes %}
+  <form id="bulk-note-form" method="post" action="{{ url_for('admin_notes_bulk_delete') }}" data-bulk-delete data-item-label="条片段">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+  <div class="bulk-toolbar" data-bulk-toolbar="bulk-note-form">
+    <label class="bulk-select-all"><input type="checkbox" data-select-all><span>全选当前列表</span></label>
+    <span class="bulk-count" aria-live="polite">已选择 0 项</span>
+    <button class="bulk-delete-button" type="submit" form="bulk-note-form" data-bulk-submit disabled>批量删除</button>
+  </div>
+  {% endif %}
+  <div class="admin-notes-grid">
+    {% for note in notes %}
+    <article>
+      <label class="select-control card-select" title="选择这条片段"><input type="checkbox" name="selected_ids" value="{{ note.id }}" form="bulk-note-form" data-bulk-item><span class="sr-only">选择这条片段</span></label>
+      <div><span class="status {{ note.status }}">{{ '已发布' if note.status == 'published' else '草稿' }}</span><time>{{ note.created_at|date_zh }}</time></div>
+      <p>{{ note.content }}</p>
+      <b>{{ note.mood }}</b>
+      <div class="post-actions">
+        <a href="{{ url_for('admin_note_edit', note_id=note.id) }}">编辑</a>
+        <form method="post" action="{{ url_for('admin_note_delete', note_id=note.id) }}" onsubmit="return confirm('确定把这条片段移入回收站吗？之后可以恢复。')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="danger">删除</button></form>
+      </div>
+    </article>
+    {% else %}<div class="empty-state">还没有片段。</div>{% endfor %}
+  </div>
+</main>
+{% endblock %}

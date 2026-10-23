@@ -1,0 +1,24 @@
+{% extends "redefine_base.html" %}
+{% block title %}工具箱｜Orange手记{% endblock %}
+{% block content %}
+<div class="main-content orange-toolbox">
+  <div class="page-template-container">
+    <h1 class="page-title-header">工具箱</h1>
+    <div class="page-template-content markdown-body">
+      <p>远程工具安装包，按需下载。</p>
+    </div>
+  </div>
+  <ul class="orange-project-list toolbox-grid" aria-label="远程工具下载">
+    {% for tool in tools %}
+    <li class="orange-project-card toolbox-card">
+      <div class="toolbox-card-heading">
+        <img class="toolbox-icon" src="{{ url_for('static', filename=tool.icon.removeprefix('static/')) }}" width="64" height="64" alt="{{ tool.title }}图标">
+        <div><h2>{{ tool.title }}</h2><p class="toolbox-meta">Windows · {{ tool.size_label }}</p></div>
+      </div>
+      <p class="toolbox-filename">{{ tool.filename }}</p>
+      <a class="toolbox-download" href="{{ url_for('toolbox_download', slug=tool.slug) }}" download="{{ tool.filename }}" data-no-pjax aria-label="下载{{ tool.title }} Windows 安装包"><i class="fa-solid fa-download" aria-hidden="true"></i> 下载安装包</a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

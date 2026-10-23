@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodic expired authentication metadata cleanup
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+RandomizedDelaySec=30s
+AccuracySec=1min
+Unit=orange-security-cleanup.service
+
+[Install]
+WantedBy=timers.target

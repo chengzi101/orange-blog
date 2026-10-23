@@ -1,0 +1,89 @@
+<!doctype html>
+
+<html lang="zh-CN">
+
+<head>
+<link rel="icon" type="image/png" sizes="32x32" href="/static/orange-favicon-32-20261019.png">
+<link rel="icon" type="image/x-icon" href="/static/orange-favicon-20261019.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/orange-favicon-180-20261019.png">
+
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block title %}Orange 管理后台{% endblock %}</title>
+
+  <link rel="stylesheet" href="/static/redefine/fonts/Chillax/chillax.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css', v='20261018-editor-save') }}">
+
+<link rel="stylesheet" href="/static/admin-redesign.css?v=20261019-comment-notifications"><script>try{document.documentElement.dataset.adminTheme=localStorage.getItem('orange-theme')==='dark'?'dark':'light'}catch{}</script>{% block head %}{% endblock %}</head>
+
+<body class="admin-page admin-page-{{ request.endpoint or 'unknown' }}">
+
+  <a class="skip-link" href="#admin-content">跳到主要内容</a>
+
+  <div class="admin-shell">
+
+    {% block header %}
+
+    <header class="admin-header">
+
+      <a class="admin-brand" href="{{ url_for('admin_dashboard') }}"><img src="/static/orange-avatar-20261017.png" alt=""><div class="admin-brand-name">Orange手记</div></a>
+
+      <nav class="admin-nav" aria-label="后台导航">
+
+        <a href="{{ url_for('admin_dashboard') }}" {% if request.endpoint in ['admin_new', 'admin_edit', 'admin_revisions'] or (request.endpoint == 'admin_dashboard' and request.args.get('view') != 'analytics') %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg><span>文章</span></a>
+
+        <a href="{{ url_for('admin_dashboard', view='analytics') }}" {% if request.endpoint == 'admin_dashboard' and request.args.get('view') == 'analytics' %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v17h17M9 16v-5M14 16V7M19 16V4"/></svg><span>统计</span></a>
+
+        <a href="{{ url_for('admin_visitors') }}" {% if request.endpoint == 'admin_visitors' %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M15 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/></svg><span>访客</span></a>
+
+        <a href="{{ url_for('admin_projects') }}" {% if request.endpoint and (request.endpoint.startswith('admin_project') or request.endpoint.startswith('latex_workbench.')) %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 8h3M14 12h3"/></svg><span>项目</span></a>
+
+
+        <a href="{{ url_for('admin_trash') }}" {% if request.endpoint and request.endpoint.startswith('admin_trash') %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-14M10 10v7M14 10v7"/></svg><span>回收站</span></a>
+
+        <a href="{{ url_for('admin_settings') }}" {% if request.endpoint == 'admin_settings' %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="9" r="2.5"/><path d="M8 17a4 4 0 0 1 8 0"/></svg><span>资料</span></a>
+
+        <a href="{{ url_for('admin_owner') }}" {% if request.endpoint == 'admin_owner' %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3M17 3l1-2 1 2 2 1-2 1-1 2-1-2-2-1z"/></svg><span>博主账号</span></a>
+
+        <a href="{{ url_for('admin_accounts') }}" {% if request.endpoint in ['admin_accounts','admin_account'] %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 22v-3a7 7 0 0 1 14 0v3M17 3a4 4 0 0 1 0 8M19 14a6 6 0 0 1 3 5v3"/></svg><span>前台账户</span></a>
+        <a href="{{ url_for('admin_comments') }}" {% if request.endpoint in ['admin_comments','comment_rules'] %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H7l-5 3V11a9 9 0 0 1 19 0Z"/><path d="m8 11 3 3 5-6"/></svg><span>评论审核</span><span class="admin-comment-badge" data-pending-comment-badge data-count-url="{{ url_for('pending_comment_count') }}" role="status" aria-live="polite" aria-atomic="true" {% if not pending_comment_count %}hidden{% endif %} aria-label="{{ pending_comment_count or 0 }} 条评论待审核">{{ '99+' if (pending_comment_count or 0) > 99 else (pending_comment_count or 0) }}</span></a>
+      </nav><div class="admin-sidebar-footer"><form class="admin-logout-form" method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="admin-logout-button" type="submit"><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>退出</span></button></form><button type="button" class="admin-theme-button" data-admin-theme-toggle>☾ 深色模式</button></div>
+
+    </header>
+
+    {% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+      <div class="flash-stack" aria-live="polite">{% for category, message in messages %}<div class="flash {{ category }}" role="status" data-flash>{{ message }}</div>{% endfor %}</div>
+
+    {% endwith %}
+
+    {% block body %}{% endblock %}
+
+  </div>
+
+  <dialog class="admin-confirm-dialog" id="admin-confirm-dialog" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-message">
+
+    <div class="admin-confirm-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-14M10 10v7M14 10v7"/></svg></div>
+
+    <h2 id="admin-confirm-title">确认操作</h2><p id="admin-confirm-message"></p><p class="admin-confirm-item" data-confirm-item-name hidden></p>
+
+    <div class="admin-confirm-actions"><button type="button" class="admin-confirm-cancel" data-confirm-cancel autofocus>取消</button><button type="button" class="admin-confirm-submit" data-confirm-submit>确认删除</button></div>
+
+  </dialog>
+
+  <div class="admin-toast" role="status" aria-live="polite" data-admin-toast></div>
+
+  <script defer src="{{ url_for('static', filename='admin.js', v='20261021-project-inline-v1') }}"></script>
+
+<script defer src="/static/editor-images.js?v=20261019-image-size"></script>
+
+<script defer src="/static/admin-redesign.js?v=20261019-latex-articles"></script><script defer src="/static/comment-notifications.js?v=20261019-1"></script>{% block scripts %}{% endblock %}</body>
+
+</html>
+

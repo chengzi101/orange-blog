@@ -1,0 +1,7 @@
+{%- macro project_cover(project) -%}
+{%- if project.slug == 'post-20261021102919' -%}
+{{ url_for('static', filename='project-covers/blog-project-20261023-v2.jpg') }}
+{%- else -%}
+{{ project.content|cover_image }}
+{%- endif -%}
+{%- endmacro -%}

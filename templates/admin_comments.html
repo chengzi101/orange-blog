@@ -1,0 +1,24 @@
+{% extends "admin_base.html" %}
+{% block title %}评论审核｜Orange 管理后台{% endblock %}
+{% block body %}
+<link rel="stylesheet" href="/static/accounts.css?v=20261019-v1">
+<link rel="stylesheet" href="/static/moderation.css?v=1">
+<main class="admin-main accounts-main" id="admin-content">
+<div class="editor-title"><div><p>COMMENTS</p><h1>评论审核</h1></div><a href="{{ url_for('comment_rules') }}">过滤规则 →</a></div>
+<nav class="accounts-search" aria-label="评论来源">{% for value,label in [('posts','文章评论'),('projects','项目评论')] %}<a href="{{ url_for('admin_comments',scope=value,status=status) }}" {% if scope==value %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<nav class="accounts-search" aria-label="审核状态">{% for value,label in [('pending','待审核'),('approved','已通过'),('rejected','已拒绝')] %}<a href="{{ url_for('admin_comments',scope=scope,status=value) }}" {% if status==value %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<p>共 {{ total }} 条 · 勾选后可批量操作。拒绝会记为违规，解封不会清除违规记录。</p>
+<form method="post" action="{{ url_for('moderate_comments') }}" id="moderation-batch" data-admin-confirm data-confirm-message="确认批量处理已选评论？"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="scope" value="{{ scope }}"></form>
+<div class="accounts-list">{% for comment in comments %}
+<article class="moderation-card">
+<h2><label><input form="moderation-batch" type="checkbox" name="comment_id" value="{{ comment.id }}" aria-label="选择评论 {{ comment.id }}"> {{ comment.nickname }}</label> <small>#{{ comment.id }} · {{ comment.status }}{% if comment.deleted_at %} · 已删除{% endif %}</small></h2>
+<p>所属{{ "项目" if scope=="projects" else "文章" }}：<a href="{{ url_for('project_detail' if scope=='projects' else 'post_detail',slug=comment.slug) }}">{{ comment.title }}</a></p>
+<p>提交：<time datetime="{{ comment.created_at }}">{{ comment.created_at }}</time>{% if comment.reviewed_at %} · 审核：{{ comment.reviewed_at }}（{{ comment.reviewed_by }}）{% endif %}</p>
+<p class="moderation-content">{{ comment.content }}</p><p>处理原因：{{ comment.moderation_reason or '历史评论' }}</p>
+<div class="moderation-actions"><a href="{{ url_for('admin_account',user_id=comment.user_id) }}">管理作者</a>
+<form method="post" action="{{ url_for('comment_user_ban',user_id=comment.user_id,action='unban' if comment.disabled_at else 'ban') }}" data-admin-confirm data-confirm-message="确认更改此用户的封禁状态？已有登录将失效。"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="scope" value="{{ scope }}"><button type="submit">{{ '解封用户' if comment.disabled_at else '封禁用户' }}</button></form>
+<form method="post" action="{{ url_for('moderate_comments') }}" data-admin-confirm data-confirm-message="确认处理这条评论？"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="scope" value="{{ scope }}"><input type="hidden" name="comment_id" value="{{ comment.id }}">{% if not comment.deleted_at %}<button name="action" value="approve">通过</button><button name="action" value="reject">拒绝</button><button name="action" value="delete">删除</button>{% endif %}</form></div>
+</article>{% else %}<p class="account-empty">暂无此状态的评论。</p>{% endfor %}</div>
+<div class="moderation-actions"><button form="moderation-batch" name="action" value="approve">批量通过</button><button form="moderation-batch" name="action" value="reject">批量拒绝</button><button form="moderation-batch" name="action" value="delete">批量删除</button></div>
+<nav class="accounts-pagination" aria-label="评论分页">{% if page>1 %}<a href="{{ url_for('admin_comments',scope=scope,status=status,page=page-1) }}">← 上一页</a>{% endif %}<span>第 {{ page }} / {{ pages }} 页</span>{% if page<pages %}<a href="{{ url_for('admin_comments',scope=scope,status=status,page=page+1) }}">下一页 →</a>{% endif %}</nav>
+</main>{% endblock %}

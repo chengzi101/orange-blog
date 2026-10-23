@@ -1,0 +1,41 @@
+{% extends "admin_base.html" %}
+{% block title %}回收站｜Orange 管理后台{% endblock %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+  <div class="dashboard-title trash-title">
+    <div><p>RECYCLE BIN</p><h1>回收站</h1><span>移入回收站后保留 30 天，到期自动彻底删除；到期前可以恢复。</span></div>
+    {% if items %}
+    <form method="post" action="{{ url_for('admin_trash_empty') }}" data-admin-confirm data-confirm-title="清空回收站？" data-confirm-message="回收站中的所有内容和图片文件都将被彻底删除，无法恢复。" data-confirm-label="清空回收站">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="empty-trash-button" type="submit">清空回收站</button>
+    </form>
+    {% endif %}
+  </div>
+  <section class="trash-stats" aria-label="回收站统计">
+    <div><strong>{{ counts.get('post', 0) }}</strong><span>文章</span></div>
+    <div><strong>{{ counts.get('project', 0) }}</strong><span>项目</span></div>
+    
+    <div><strong>{{ counts.get('media', 0) }}</strong><span>图片</span></div>
+  </section>
+  <div class="trash-list">
+    {% for item in items %}
+    <article>
+      <div class="trash-type trash-type-{{ item.item_type }}">{{ {'post':'文章','project':'项目','media':'图片'}.get(item.item_type, item.item_type) }}</div>
+      <div><h2>{{ item.title }}</h2><p>删除于 {{ item.deleted_at|date_time_zh }}{% set expires = item.deleted_at|trash_expiry %}{% if expires %} · 到期于 {{ expires|date_time_zh }}{% endif %}</p></div>
+      <div class="post-actions">
+        <form method="post" action="{{ url_for('admin_trash_restore', trash_id=item.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="restore-button">恢复</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_trash_delete', trash_id=item.id) }}" data-admin-confirm data-confirm-title="彻底删除这项内容？" data-confirm-message="删除后无法恢复，请确认是否继续。" data-confirm-label="彻底删除" data-confirm-item="{{ item.title }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="danger">彻底删除</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="trash-empty"><span>✓</span><h2>回收站是空的</h2><p>这里没有等待处理的内容。</p><a href="{{ url_for('admin_dashboard') }}">返回内容管理</a></div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}

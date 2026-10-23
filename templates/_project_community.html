@@ -1,0 +1,37 @@
+{% from "_reader_comment.html" import render_comment %}
+<section class="post-community project-community" data-project-community id="comments" aria-labelledby="comments-heading" data-reader-community data-authenticated="{{ '1' if reader_user else '0' }}" data-login-url="{{ url_for('reader.login', next=url_for('project_detail',slug=project.slug) ~ '#comments') }}" data-post-url="{{ url_for('project_detail',slug=project.slug) }}" data-comment-page="{{ community.page }}" data-comment-sort="{{ community.sort }}">
+  <div class="project-like-row">
+    <form method="post" action="{{ url_for('reader.project_like',project_id=project.id) }}" class="reader-like-form">
+      <input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf>
+      <input type="hidden" name="liked" value="{{ '0' if community.liked else '1' }}">
+      <button type="submit" class="reader-like-button" aria-pressed="{{ 'true' if community.liked else 'false' }}"><span aria-hidden="true">♡</span> <span data-like-label>{{ '已点赞' if community.liked else '点赞这个项目' }}</span> <b data-like-count>{{ community.like_count }}</b></button>
+    </form>
+  </div>
+  <div class="reader-reaction-row"><h2 id="comments-heading">项目讨论</h2></div>
+  <p class="project-community-intro">遇到问题，或者有改进建议？一起聊聊。</p>
+  <p class="reader-section-status" role="status" aria-live="polite" data-reader-status>{% for message in get_flashed_messages() %}{{ message }} {% endfor %}</p>
+  <div data-comment-form-home></div>
+  <form method="post" action="{{ url_for('reader.project_comments',project_id=project.id) }}" class="reader-comment-form">
+    <input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf>
+    <input type="hidden" name="submission_id" value="{{ reader_submission_id() }}">
+    <input type="hidden" name="reply_to_id" value="">
+    <div class="reader-reply-context" hidden><span data-reply-context></span><button type="button" data-cancel-reply>取消回复</button></div>
+    <label for="reader-comment-content">留下你的想法</label>
+    <textarea id="reader-comment-content" name="content" rows="4" maxlength="2000" {% if not reader_user %}readonly data-reader-login-trigger{% else %}required{% endif %} placeholder="{{ '写下评论，友好交流……' if reader_user else '登录后即可发表评论，点击前往登录' }}"></textarea>
+    <div class="reader-comment-footer"><span data-comment-identity>{{ reader_user.nickname ~ ' · 最多 2000 字' if reader_user else '登录后参与讨论' }}</span><button class="reader-primary" type="submit">发表评论</button></div>
+  </form>
+  <div class="reader-comments-heading"><h3>评论 <span data-comment-count>{{ community.comment_count }}</span></h3><label class="reader-sort-label">排序 <select data-comment-sort-select aria-label="评论排序">{% for value,label in [('newest','时间倒序'),('oldest','时间正序'),('likes','点赞最多')] %}<option value="{{ value }}" {% if community.sort == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>
+  <div class="reader-comment-list" data-comment-list>
+  {% for comment in community.comments %}
+    <div class="reader-thread" data-thread-id="{{ comment.id }}">
+      {{ render_comment(comment) }}
+      <div class="reader-thread-replies" data-thread-replies>{% for reply in comment.replies %}{{ render_comment(reply) }}{% endfor %}</div>
+      {% if comment.next_reply_cursor %}<a class="reader-reply-button" href="{{ url_for('project_detail',slug=project.slug,comments_sort=community.sort,comments_page=community.page,reply_thread=comment.id,reply_after=comment.next_reply_cursor) }}#comment-{{ comment.id }}" data-more-replies data-replies-url="{{ comment.replies_url }}" data-replies-cursor="{{ comment.next_reply_cursor }}">更多回复</a>{% endif %}
+    </div>
+  {% else %}<p class="reader-no-comments" data-no-comments>还没有评论，来留下第一条想法吧。</p>{% endfor %}
+  </div>
+  <nav class="reader-comment-pagination" data-comments-pagination aria-label="评论分页">
+    {% if community.page > 1 %}<a href="{{ url_for('project_detail',slug=project.slug,comments_sort=community.sort,comments_page=community.page-1) }}#comments">上一页</a>{% endif %}
+    {% if community.page < community.pages %}<a href="{{ url_for('project_detail',slug=project.slug,comments_sort=community.sort,comments_page=community.page+1) }}#comments">下一页 →</a>{% endif %}
+  </nav>
+</section>

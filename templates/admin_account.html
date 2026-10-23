@@ -1,0 +1,17 @@
+{% extends "admin_base.html" %}
+{% block title %}管理 {{ user.nickname }}｜Orange 管理后台{% endblock %}
+{% block body %}
+<link rel="stylesheet" href="/static/accounts.css?v=20261019-owner-yellow-v1">
+{% macro action_fields(action) %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ action }}">{% endmacro %}
+<main class="admin-main accounts-main" id="admin-content">
+<div class="editor-title"><div><p>READER ACCOUNT · ID {{ user.id }}</p><h1>{{ user.nickname }} {% if is_owner %}<span class="account-badge is-owner">博主</span>{% elif user.custom_title %}<span class="account-badge">{{ user.custom_title }}</span>{% endif %}</h1></div><a href="{{ url_for('admin_accounts') }}">返回账户列表</a></div>
+<p class="accounts-muted">注册于 {{ user.created_at|date_time_zh }}（北京时间） · 状态：{{ '已停用' if user.disabled_at else '正常' }}</p>
+{% if error %}<p class="accounts-error" role="alert">{{ error }}</p>{% endif %}
+<div class="account-panels">
+<section class="account-panel"><h2>用户头衔</h2>{% if is_owner %}<p>当前账号使用“博主”系统头衔。</p>{% else %}<p>头衔显示在评论和回复的昵称旁，已有评论同步更新。最多 12 个字符，留空保存可清除。</p><form method="post">{{ action_fields('title') }}<label>头衔<input name="custom_title" maxlength="12" value="{{ request.form.get('custom_title',user.custom_title) if request.form.get('action')=='title' else user.custom_title }}" placeholder="例如：热心读者" autocomplete="off"></label><button class="primary-button">保存头衔</button></form>{% endif %}</section>
+<section class="account-panel"><h2>修改昵称</h2><p>昵称也是前台登录名，已有评论会同步显示新昵称。</p><form method="post">{{ action_fields('rename') }}<label>新昵称<input name="nickname" maxlength="24" required value="{{ request.form.get('nickname',user.nickname) if request.form.get('action')=='rename' else user.nickname }}" autocomplete="off"></label><button class="primary-button">保存昵称</button></form></section>
+<section class="account-panel"><h2>重置密码</h2><p>设置新密码后，该账号在所有设备上的旧登录都会失效。</p><form method="post" data-admin-confirm data-confirm-title="重置该账户密码？" data-confirm-message="原密码将失效，该账号的全部旧登录会退出。请将新密码妥善交给账号本人。" data-confirm-label="确认重置">{{ action_fields('password') }}<label>新密码<input type="password" name="password" minlength="8" maxlength="24" required autocomplete="new-password"></label><label>再次输入<input type="password" name="confirm_password" minlength="8" maxlength="24" required autocomplete="new-password"></label><button class="primary-button">重置密码</button></form></section>
+<section class="account-panel"><h2>登录管理</h2><p>退出该账号在所有设备上的前台登录，下次需要重新登录。</p><form method="post" data-admin-confirm data-confirm-title="退出所有登录？" data-confirm-message="该账号所有设备的前台登录都会失效。" data-confirm-label="确认退出">{{ action_fields('logout') }}<button class="secondary-button">退出所有登录</button></form></section>
+<section class="account-panel"><h2>{{ '恢复账户' if user.disabled_at else '停用账户' }}</h2><p>停用后无法登录或参与互动，已有评论和点赞仍保留。恢复后需要重新登录。</p>{% if is_owner %}<p class="accounts-muted">当前绑定的博主账号不能停用。如需停用，请先<a href="{{ url_for('admin_owner') }}">更换博主绑定</a>。</p>{% else %}<form method="post" data-admin-confirm data-confirm-title="{{ '恢复此账号？' if user.disabled_at else '停用此账号？' }}" data-confirm-message="{{ '恢复后该账号可以重新登录。' if user.disabled_at else '该账号将退出所有登录并停止前台互动，原有内容保留。' }}" data-confirm-label="确认">{{ action_fields('enable' if user.disabled_at else 'disable') }}<button class="secondary-button account-danger">{{ '恢复账户' if user.disabled_at else '停用账户' }}</button></form>{% endif %}</section>
+</div></main>
+{% endblock %}

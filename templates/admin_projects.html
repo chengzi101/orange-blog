@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+  <div class="dashboard-title">
+    <div><p>PROJECTS</p><h1>项目管理</h1></div>
+    <div><a class="secondary-button" href="{{ url_for('latex_workbench.index') }}">已有 LaTeX 文档</a> <a class="primary-button" href="{{ url_for('admin_project_new') }}">＋ 新建项目</a></div>
+  </div>
+  {% if projects %}
+  <form id="bulk-project-form" method="post" action="{{ url_for('admin_projects_bulk_delete') }}" data-bulk-delete data-item-label="个项目">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+  <div class="bulk-toolbar" data-bulk-toolbar="bulk-project-form">
+    <label class="bulk-select-all"><input type="checkbox" data-select-all><span>全选当前列表</span></label>
+    <span class="bulk-count" aria-live="polite">已选择 0 项</span>
+    <button class="bulk-delete-button" type="submit" form="bulk-project-form" data-bulk-submit disabled>批量删除</button>
+  </div>
+  {% endif %}
+  <div class="admin-card-grid">
+    {% for project in projects %}
+    <article class="admin-content-card">
+      <label class="select-control card-select" title="选择《{{ project.title }}》"><input type="checkbox" name="selected_ids" value="{{ project.id }}" form="bulk-project-form" data-bulk-item><span class="sr-only">选择《{{ project.title }}》</span></label>
+      <div class="admin-card-status"><span class="status {{ 'published' if project.is_visible else 'draft' }}">{{ '公开' if project.is_visible else '隐藏' }}</span><span>{{ project.status|project_status }}</span></div>
+      <p>{{ project.year }} · 排序 {{ project.sort_order }}</p>
+      <h2>{{ project.title }}</h2>
+      <div class="mini-tags">{% for item in project.stack|tags_list %}<span>{{ item }}</span>{% endfor %}</div>
+      <div class="post-actions">
+        {% if project.is_visible %}<a href="{{ url_for('project_detail', slug=project.slug) }}" target="_blank">查看</a>{% endif %}
+        <a href="{{ url_for('admin_project_edit', project_id=project.id) }}">编辑</a>
+        <form method="post" action="{{ url_for('admin_project_delete', project_id=project.id) }}" onsubmit="return confirm('确定把这个项目移入回收站吗？之后可以恢复。')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="danger">删除</button></form>
+      </div>
+    </article>
+    {% else %}<div class="empty-state">还没有项目。</div>{% endfor %}
+  </div>
+</main>
+{% endblock %}

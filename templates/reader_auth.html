@@ -1,0 +1,22 @@
+{% extends "redefine_base.html" %}
+{% block title %}{{ '注册' if mode == 'register' else '登录' }}｜Orange手记{% endblock %}
+{% block content %}
+<div class="main-content reader-auth-wrap">
+  <section class="reader-auth-card" aria-labelledby="reader-auth-heading">
+    <p class="reader-eyebrow">ORANGE · READERS</p>
+    <h1 id="reader-auth-heading">{{ '加入 Orange 手记' if mode == 'register' else '欢迎回来' }}</h1>
+    <p class="reader-auth-intro">{{ '取一个昵称，留下你的想法。' if mode == 'register' else '登录后即可点赞和参与评论。' }}</p>
+    {% if error %}<p class="reader-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="{{ url_for('reader.register' if mode == 'register' else 'reader.login') }}" class="reader-auth-form">
+      <input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf>
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <label>昵称<input name="nickname" value="{{ nickname }}" required maxlength="24" autocomplete="username" placeholder="你的昵称" autofocus></label>
+      <label>密码<input type="password" name="password" required minlength="{{ 8 if mode == 'register' else 1 }}" maxlength="{{ 24 if mode == 'register' else 128 }}" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" placeholder="{{ '8–24 个字符' if mode == 'register' else '输入密码' }}"></label>
+      {% if mode == 'register' %}<label>确认密码<input type="password" name="confirm_password" required minlength="8" maxlength="24" autocomplete="new-password" placeholder="再次输入密码"></label>{% endif %}
+      <button class="reader-primary" type="submit">{{ '注册并登录' if mode == 'register' else '登录' }}</button>
+    </form>
+    <p class="reader-auth-switch">{{ '已有账号？' if mode == 'register' else '还没有账号？' }}<a data-no-pjax href="{{ url_for('reader.login' if mode == 'register' else 'reader.register', next=next_url) }}">{{ '去登录' if mode == 'register' else '注册一个' }}</a></p>
+    <a class="reader-return" href="{{ next_url }}" data-no-pjax>← 返回阅读</a>
+  </section>
+</div>
+{% endblock %}

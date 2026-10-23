@@ -1,0 +1,38 @@
+{% extends "redefine_base.html" %}
+{% block title %}个人中心｜Orange手记{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='redefine/profile.css') }}?v=20261019-profile-v1">{% endblock %}
+{% block content %}
+<div class="main-content reader-profile">
+  <header class="profile-heading"><div><p class="reader-eyebrow">ORANGE · MY ACCOUNT</p><h1>个人中心</h1><p>管理你的资料，回看留下的每一个想法。</p></div><a href="/articles" data-no-pjax>返回阅读 ↗</a></header>
+  {% if error %}<p class="reader-error profile-notice" role="alert">{{ error }}</p>{% endif %}
+  {% if notice %}<p class="profile-notice" role="status">{{ notice }}</p>{% endif %}
+  <div class="profile-grid">
+    <aside class="profile-summary profile-card">
+      <div class="profile-portrait">{% if reader_user.avatar_url %}<img src="{{ reader_user.avatar_url }}" alt="当前头像" width="96" height="96">{% else %}<span aria-label="默认头像">{{ account.nickname[:1] }}</span>{% endif %}</div>
+      <h2>{{ account.nickname }}</h2><p>ID {{ account.id }}{% if account.id == owner_reader_id %} · 博主{% endif %}</p>
+      <p class="profile-joined">加入于 {{ account.created_at[:10] }}</p>
+      <a class="profile-comment-jump" href="#my-comments">我的评论 <strong>{{ total }}</strong></a>
+    </aside>
+    <div class="profile-settings">
+      <section class="profile-card"><p class="reader-eyebrow">PROFILE</p><h2>账户昵称</h2><p class="profile-help">昵称不可重复，也用于登录。每个账号仅可自行修改一次，已有评论会同步显示新昵称。</p><p class="profile-help" data-nickname-limit>{% if account.nickname_change_used %}已用完 1 次昵称修改机会。如需再次修改，请联系管理员修改。{% else %}剩余 1 次修改机会，请谨慎确认。{% endif %}</p>
+        <form method="post" action="/account" class="profile-form"><input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf><input type="hidden" name="action" value="nickname">
+          <label for="nickname">昵称</label><input id="nickname" name="nickname" value="{{ account.nickname }}" maxlength="24" required autocomplete="username" {% if account.nickname_change_used %}readonly{% endif %}><button class="reader-primary" type="submit" {% if account.nickname_change_used %}disabled title="请联系管理员修改"{% endif %}>保存昵称</button>
+        </form>
+      </section>
+      <section class="profile-card"><p class="reader-eyebrow">SECURITY</p><h2>修改密码</h2><p class="profile-help">必须验证旧密码。修改成功后，其他设备需重新登录。</p>
+        <form method="post" action="/account" class="profile-form"><input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf><input type="hidden" name="action" value="password">
+          <label for="old-password">旧密码</label><input id="old-password" name="old_password" type="password" required maxlength="128" autocomplete="current-password">
+          <div class="profile-password-grid"><div><label for="new-password">新密码</label><input id="new-password" name="new_password" type="password" required minlength="8" maxlength="24" autocomplete="new-password" placeholder="8–24 个字符"></div><div><label for="confirm-password">确认新密码</label><input id="confirm-password" name="confirm_password" type="password" required minlength="8" maxlength="24" autocomplete="new-password"></div></div>
+          <button class="reader-primary" type="submit">修改密码</button>
+        </form>
+      </section>
+    </div>
+  </div>
+  <section class="profile-card profile-comments" id="my-comments" aria-labelledby="my-comments-title"><div class="profile-comments-heading"><h2 id="my-comments-title">我的评论</h2><span>共 {{ total }} 条 · 包含所有审核状态</span></div>
+    {% for comment in comments %}<article class="profile-comment" data-my-comment="{{ comment.id }}"><div class="profile-comment-meta"><span class="profile-comment-status">{{ {'approved':'已发表','pending':'待审核','rejected':'未通过'}.get(comment.status, '待审核') }}</span><time datetime="{{ comment.created_at }}">{{ comment.created_at|replace('T',' ')|replace('+00:00',' UTC') }}</time>{% if comment.parent_id %}<span>回复</span>{% endif %}</div><p>{{ comment.content }}</p>
+      {% if comment.slug %}<a data-no-pjax href="{{ url_for('project_detail' if comment.content_kind=='project' else 'post_detail', slug=comment.slug) }}{% if comment.status == 'approved' %}#comment-{{ comment.id }}{% else %}#comments{% endif %}">{{ comment.post_title }} ↗</a>{% else %}<span class="profile-help">{{ comment.post_title }}</span>{% endif %}</article>
+    {% else %}<div class="profile-empty"><p>还没有留下评论</p><a href="/articles" data-no-pjax>去读一篇文章 ↗</a></div>{% endfor %}
+    {% if pages > 1 %}<nav class="profile-pagination" aria-label="我的评论分页">{% if page > 1 %}<a data-no-pjax href="{{ url_for('profile.account', page=page-1) }}#my-comments">← 上一页</a>{% endif %}<span>{{ page }} / {{ pages }}</span>{% if page < pages %}<a data-no-pjax href="{{ url_for('profile.account', page=page+1) }}#my-comments">下一页 →</a>{% endif %}</nav>{% endif %}
+  </section>
+</div>
+{% endblock %}

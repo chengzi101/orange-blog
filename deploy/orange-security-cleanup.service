@@ -1,0 +1,24 @@
+[Unit]
+Description=Bounded cleanup of expired Orange authentication metadata
+After=orange-blog.service
+
+[Service]
+Type=oneshot
+User=orange-blog
+Group=orange-blog
+WorkingDirectory=/opt/orange-blog/current
+EnvironmentFile=/etc/orange-blog.env
+Environment=PYTHONNOUSERSITE=1
+ExecStart=/opt/orange-blog/current/.venv/bin/python /opt/orange-blog/current/security_admin.py cleanup --batch-size 500 --max-batches 60
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/orange-blog
+RestrictAddressFamilies=AF_UNIX
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+MemoryMax=128M
+TimeoutStartSec=60

@@ -1,0 +1,7 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="admin-main">
+  <div class="editor-title"><div><p>REVISION HISTORY</p><h1>历史版本</h1><p class="revision-policy">每篇文章仅保留最近 5 个历史版本</p><span>{{ post.title }}</span></div><a href="{{ url_for('admin_edit', post_id=post.id) }}">返回编辑</a></div>
+  <div class="revision-list">{% for revision in revisions %}<article><div><span>版本 {{ revisions|length - loop.index0 }}</span><time>{{ revision.created_at|date_zh }}</time></div><h2>{{ revision.title }}</h2><p>{{ revision.excerpt or revision.content[:120] }}</p><details><summary>查看正文片段</summary><pre>{{ revision.content[:1200] }}</pre></details><form method="post" action="{{ url_for('admin_revision_restore', revision_id=revision.id) }}" onsubmit="return confirm('恢复这个版本吗？当前版本也会自动保留。')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary-button">恢复此版本</button></form></article>{% else %}<div class="empty-state">还没有历史版本。文章编辑并保存后会自动生成。</div>{% endfor %}</div>
+</main>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+{% block title %}博主账号｜Orange 管理后台{% endblock %}
+{% block body %}
+<main id="admin-content" class="admin-main"><section class="owner-panel">
+<h1>博主账号</h1>
+{% if owner %}
+<p>当前绑定：<strong>{{ owner.nickname }}</strong> <span class="owner-admin-badge">博主</span></p>
+<p>使用此账号在前台点赞、发表评论，评论会显示博主标识。</p>
+<form method="post" action="{{ url_for('admin_owner_login') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="primary-button" type="submit">以博主身份访问前台</button></form>
+<hr style="margin:24px 0"><h2>更换绑定</h2><p>更换后，博主标识随绑定账号变化，已有评论内容保留。</p>
+{% else %}<p>创建专用账号或绑定已有账号后，即可从后台快捷登录前台，无需另行注册。</p>{% endif %}
+{% if error %}<p role="alert" style="color:#b42318">{{ error }}</p>{% endif %}
+<form method="post" class="owner-binding-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>账号方式<select name="action" id="owner-action"><option value="create" {% if request.form.get('action') != 'bind' %}selected{% endif %}>创建专用博主账号</option><option value="bind" {% if request.form.get('action') == 'bind' %}selected{% endif %}>绑定已有读者账号</option></select></label>
+<label>昵称<input name="nickname" maxlength="24" required value="{{ request.form.get('nickname', '') }}" placeholder="例如 Orange" autocomplete="off"></label>
+<label>密码<input type="password" name="password" minlength="8" maxlength="24" autocomplete="new-password"></label>
+<p>创建时密码可留空，之后通过后台快捷登录；填写 8–24 位密码也可在前台直接登录。绑定已有账号时必须填写该账号的密码。</p>
+<button class="primary-button" type="submit">{{ '保存新绑定' if owner else '创建或绑定博主账号' }}</button>
+</form></section></main>
+<script>(()=>{const form=document.querySelector('.owner-binding-form');const mode=form.elements.action;const password=form.elements.password;function limits(){const bind=mode.value==='bind';password.maxLength=bind?128:24;password.minLength=bind?1:8;password.required=bind;password.autocomplete=bind?'current-password':'new-password';}mode.addEventListener('change',limits);limits();})();</script>
+<style>.owner-panel{max-width:720px;margin:24px auto;padding:clamp(16px,4vw,32px);border:1px solid var(--line,#c4cbd1);border-radius:16px;background:var(--surface)}.owner-panel h1{font-size:28px;margin-bottom:16px}.owner-panel h2{font-size:20px}.owner-panel p{margin:12px 0;line-height:1.8}.owner-binding-form{display:grid;gap:16px}.owner-binding-form label{display:grid;gap:8px}.owner-binding-form input,.owner-binding-form select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #8494a4;border-radius:8px;color:var(--text);background:var(--surface)}.owner-admin-badge{font-size:12px;padding:3px 8px;border-radius:6px;background:#33759b;color:white}.owner-binding-form option{color:var(--text);background:var(--surface)}.owner-binding-form p{line-height:1.8}</style>
+{% endblock %}

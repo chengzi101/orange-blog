@@ -1,0 +1,42 @@
+{% extends "redefine_base.html" %}{% block title %}关于本站｜Orange手记{% endblock %}{% block content %}<div class="main-content"><div class="page-template-container orange-legacy-content">
+<main id="main-content">
+  
+
+  <section class="collection-hero colophon-hero">
+    <p>COLOPHON / 关于本站</p>
+    <h1>一个长期写作空间，<br><strong>是怎样运行的。</strong></h1>
+    <div><span>{{ stats.posts }} 篇文章</span><span>{{ stats.projects }} 个项目</span></div>
+  </section>
+
+  <section class="colophon-intro">
+    <p>Orange 从一张静态首页开始，逐渐长成一个拥有内容管理、搜索、版本历史、媒体库、访问统计和私人后台的个人写作系统。</p>
+    <a href="{{ url_for('project_detail', slug='orange-blog') }}">查看项目记录 ↗</a>
+  </section>
+
+  <section class="system-map">
+    <div class="section-heading"><p>SYSTEM MAP</p><h2>从写下到被读到</h2><span>05 层</span></div>
+    <ol>
+      <li><span>01</span><div><h3>写作层</h3><p>文章与项目使用不同编辑路径；支持草稿、预览、Markdown 和快捷保存。</p></div><b>CREATE</b></li>
+      <li><span>02</span><div><h3>内容层</h3><p>SQLite 保存正文、标签、分类、历史版本、媒体记录和网站资料。</p></div><b>STORE</b></li>
+      <li><span>03</span><div><h3>发现层</h3><p>搜索、主题地图、标签、相关阅读、时间归档和 RSS 帮助旧内容重新出现。</p></div><b>DISCOVER</b></li>
+      <li><span>04</span><div><h3>服务层</h3><p>Flask 处理页面与后台逻辑，Gunicorn 运行应用，Nginx 接收公开请求。</p></div><b>SERVE</b></li>
+      <li><span>05</span><div><h3>安全层</h3><p>公网只开放阅读；后台通过本机私钥和 SSH 隧道进入，数据库在发布之间持续保留。</p></div><b>PROTECT</b></li>
+    </ol>
+  </section>
+
+  <section class="colophon-principles">
+    <article><span>01</span><h2>内容优先</h2><p>视觉帮助建立层级，但不能让阅读变成寻找信息。</p></article>
+    <article><span>02</span><h2>默认可靠</h2><p>安全入口、数据库保留和表单反馈都应依靠系统默认，而不是临时记忆。</p></article>
+    <article><span>03</span><h2>保持可迁移</h2><p>Markdown、SQLite、RSS 和普通文件让内容不被单一平台锁住。</p></article>
+    <article><span>04</span><h2>克制动效</h2><p>高频操作安静，状态变化明确，并尊重“减少动态效果”设置。</p></article>
+  </section>
+
+  <section class="colophon-details">
+    <div><p>DESIGN</p><h2>暖灰纸张、深墨首屏和 Orange 强调色</h2></div>
+    <div><p>ACCESSIBILITY</p><h2>键盘焦点、跳转链接、语义导航与减少动态效果</h2></div>
+    <div><p>UPDATES</p><h2>内容在后台持续更新，代码采用保留数据库的版本化发布</h2></div>
+  </section>
+
+  
+</main>
+</div></div>{% endblock %}

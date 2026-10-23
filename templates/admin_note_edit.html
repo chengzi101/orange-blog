@@ -1,0 +1,7 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="editor-main compact-editor" id="admin-content">
+  <div class="editor-title"><div><p>QUICK NOTE</p><h1>{{ '编辑片段' if note else '新建片段' }}</h1></div><div><span class="form-state" data-form-state data-state="saved">已同步</span><a href="{{ url_for('admin_notes') }}">取消</a></div></div>
+  <form method="post" class="note-editor-card" data-track-changes><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label>片段内容<textarea name="content" rows="9" required maxlength="800" placeholder="写下此刻的想法……">{{ note.content if note else '' }}</textarea></label><div><label>类型<input name="mood" value="{{ note.mood if note else '想法' }}" placeholder="想法、阅读、构建"></label><label>状态<select name="status"><option value="draft" {% if not note or note.status != 'published' %}selected{% endif %}>保存为草稿</option><option value="published" {% if note and note.status == 'published' %}selected{% endif %}>立即发布</option></select></label></div><button class="primary-button" type="submit">保存片段</button></form>
+</main>
+{% endblock %}

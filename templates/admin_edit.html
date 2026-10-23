@@ -1,0 +1,29 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<main class="editor-main" id="admin-content">
+  <div class="editor-title"><div><p>EDITOR</p><h1>{{ '编辑文章' if post else '新建文章' }}</h1></div><div><span class="form-state" data-form-state data-state="saved" role="status" aria-live="polite">已同步</span>{% if post and post.id %}<a href="{{ url_for('admin_revisions', post_id=post.id) }}">历史版本</a>{% endif %}<a href="{{ url_for('admin_dashboard') }}">取消</a></div></div>
+  <form method="post" class="editor-form" data-editor-form data-track-changes data-image-upload-url="{{ url_for('admin_media') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="editor-grid">
+      <div class="editor-primary">
+        <label>标题<input name="title" value="{{ post.title if post else '' }}" required placeholder="文章标题" data-title></label>
+        <label>摘要 <small>留空时自动从正文生成</small><textarea name="excerpt" rows="3" placeholder="首页显示的简短介绍">{{ post.excerpt if post else '' }}</textarea></label>
+        <p data-format-hint hidden>正文包含 LaTeX 章节或文档命令。<button type="button" class="secondary-button" data-switch-latex>切换为 LaTeX 文章</button></p>
+        <div class="editor-format-tools" data-latex-tools hidden><button type="button" class="secondary-button" data-latex-insert="section">插入章节</button><button type="button" class="secondary-button" data-latex-insert="math">插入公式</button><button type="button" class="secondary-button" data-latex-insert="list">插入列表</button><button type="button" class="secondary-button" data-latex-example>插入示例</button><button type="button" class="secondary-button" data-latex-download>下载 .tex</button><p>支持常用 LaTeX 章节、列表、公式和图片，转换为网页发布；特殊宏包与纸张版式可能不适用。</p></div>
+        <label>正文 <small data-content-help>支持 Markdown、表格、代码块；可直接 Ctrl+V 粘贴截图，自动上传并插入图片链接</small><textarea class="content-editor" name="content" required placeholder="从这里开始写作……" data-content>&#10;{{ post.content if post else '' }}</textarea></label>
+        <div class="editor-help"><span>字数 <b data-word-count>0</b></span><span>预计阅读 <b data-read-time>1</b> 分钟</span><span>快捷保存 Ctrl / ⌘ + S</span></div>
+      </div>
+      <aside class="editor-side">
+        <label>链接别名<input name="slug" value="{{ post.slug if post else '' }}" placeholder="my-first-post"><small>仅使用小写英文和数字</small></label>
+        <label>分类<input name="category" value="{{ post.category if post else '' }}" placeholder="技术、研究、随笔"></label>
+        <label>标签<input name="tags" value="{{ post.tags if post else '' }}" placeholder="技术,随笔"><small>逗号分隔多个标签</small></label>
+        <label>编辑格式<select name="content_format" data-content-format><option value="markdown" {% if not post or post.content_format|default('markdown') != 'latex' %}selected{% endif %}>Markdown</option><option value="latex" {% if post and post.content_format|default('markdown') == 'latex' %}selected{% endif %}>LaTeX 文章</option></select><small>切换格式不会自动改写正文</small></label>
+        <label>状态<select name="status"><option value="draft" {% if not post or post.status != 'published' %}selected{% endif %}>保存为草稿</option><option value="published" {% if post and post.status == 'published' %}selected{% endif %}>立即发布</option></select></label>
+        <label class="check-label"><input type="checkbox" name="is_featured" value="1" {% if post and post.is_featured %}checked{% endif %}><span><b>设为首页精选</b><small>会替换当前精选文章</small></span></label>
+        <button class="secondary-button" type="submit" formaction="{{ url_for('admin_preview') }}" formtarget="_blank">预览文章 ↗</button>
+        <button class="primary-button save-button" type="submit">保存文章</button>
+      </aside>
+    </div>
+  </form>
+</main>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "redefine_base.html" %}{% block title %}知识花园｜Orange手记{% endblock %}{% block content %}<div class="main-content"><div class="page-template-container orange-legacy-content">
+<main id="main-content">
+  
+
+  <section class="collection-hero garden-hero">
+    <p>CONTENT GARDEN / 内容地图</p>
+    <h1>内容不是归档，<br><strong>而是不断生长的地图。</strong></h1>
+    <div><span>{{ stats.posts }} 篇文章</span><span>{{ stats.projects }} 个项目</span><span>{{ stats.topics }} 个主题</span></div>
+  </section>
+
+  <section class="garden-lanes">
+    <a href="{{ url_for('articles') }}"><span>01 / ARTICLES</span><h2>长文与方法</h2><p>完整的问题、过程、判断和可以复用的经验。</p><b>{{ stats.posts }} 篇文章 ↗</b></a>
+    <a href="{{ url_for('projects') }}"><span>02 / PROJECTS</span><h2>正在构建</h2><p>把想法变成可以运行、验证和继续改进的东西。</p><b>{{ stats.projects }} 个项目 ↗</b></a>
+    
+  </section>
+
+  <section class="section garden-topics">
+    <div class="section-heading"><p>TOPICS</p><h2>按主题寻找</h2><span>{{ stats.topics }} 个主题</span></div>
+    <div class="garden-category-list">
+      {% for category, posts in posts_by_category.items() %}
+      <article>
+        <div class="garden-category-heading"><span>{{ "%02d"|format(loop.index) }}</span><h3>{{ category }}</h3><b>{{ posts|length }} 篇</b></div>
+        <div>{% for post in posts %}<a href="{{ url_for('post_detail', slug=post.slug) }}"><span>{{ post.published_at|date_zh }}</span><p>{{ post.title }}</p><b>{{ post.reading_minutes }} min ↗</b></a>{% endfor %}</div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="garden-tags"><p>INDEX / 标签索引</p><div>{% for tag, count in tag_counts %}<a href="{{ url_for('articles', tag=tag) }}"># {{ tag }} <small>{{ count }}</small></a>{% endfor %}</div></div>
+  </section>
+
+  <section class="section garden-activity">
+    <div class="section-heading"><p>RECENT ACTIVITY</p><h2>最近更新</h2><span>{{ recent_activity|length }} 条</span></div>
+    <div class="activity-list garden-activity-list">
+      {% for item in recent_activity %}<a href="{{ item.url }}"><span>{{ item.kind }}</span><p>{{ item.title }}</p><b>{{ item.meta }} · {{ item.updated_at|date_zh }}</b></a>{% endfor %}
+    </div>
+  </section>
+
+  <section class="garden-more">
+    <a href="{{ url_for('uses') }}"><span>TOOLS / 工具箱</span><h2>我怎样工作</h2><p>正在使用的技术、工作环境，以及选择这些工具的理由。</p><b>打开 Uses ↗</b></a>
+    <a href="{{ url_for('colophon') }}"><span>COLOPHON / 关于本站</span><h2>Orange 怎样运行</h2><p>内容模型、技术结构、安全入口、设计原则和持续更新方式。</p><b>查看建站说明 ↗</b></a>
+    <a href="{{ url_for('about') }}"><span>ABOUT / 关于我</span><h2>保持好奇，持续构建</h2><p>这个网站在记录什么，以及我现在关心的问题。</p><b>更多关于我 ↗</b></a>
+  </section>
+
+  <section class="garden-rss">
+    <div><p>FOLLOW THE GARDEN</p><h2>不必每次想起网址。</h2></div>
+    <p>通过 RSS 订阅，每当有新文章发布，你的阅读器就会收到更新。</p>
+    <a href="{{ url_for('feed') }}">订阅 RSS ↗</a>
+  </section>
+
+  
+</main>
+</div></div>{% endblock %}

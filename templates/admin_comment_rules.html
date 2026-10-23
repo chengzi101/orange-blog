@@ -1,0 +1,11 @@
+{% extends "admin_base.html" %}
+{% block title %}评论过滤规则｜Orange 管理后台{% endblock %}
+{% block body %}
+<link rel="stylesheet" href="/static/accounts.css?v=20261019-v1"><link rel="stylesheet" href="/static/moderation.css?v=1">
+<main class="admin-main accounts-main" id="admin-content"><h1>评论过滤规则</h1><p><a href="{{ url_for('admin_comments') }}">← 评论审核</a></p>
+<p>每行一项。禁止词和禁止域名直接拒绝；待审词、外部链接、重复内容和重复字符进入审核。规则按 NFKC 规范化，忽略大小写和空白。清空某类可关闭该类词表。</p>
+<form method="post" class="moderation-rules"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% for key,label in [('reject_words','禁止词'),('review_words','待审词'),('blocked_domains','禁止广告域名')] %}<label for="{{ key }}">{{ label }}</label><textarea id="{{ key }}" name="{{ key }}" rows="6" maxlength="20200">{{ rules[key]|join('\n') }}</textarea>{% endfor %}
+<button class="primary-button">保存规则</button></form>
+<p>用户：30 秒 1 条、滚动每小时 20 条。IP：滚动每分钟 10 条、每小时 60 条；额外限制评论请求每小时 100 次，注册请求每小时 10 次。均由后端执行。</p>
+</main>{% endblock %}

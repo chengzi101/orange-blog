@@ -1,0 +1,50 @@
+{% extends "redefine_base.html" %}{% block title %}工具箱｜Orange手记{% endblock %}{% block content %}<div class="main-content"><div class="page-template-container orange-legacy-content">
+<main id="main-content">
+  
+
+  <section class="collection-hero uses-hero">
+    <p>USES / 工具箱</p>
+    <h1>工具不是收藏，<br><strong>而是工作方式的外壳。</strong></h1>
+    <div><span>开发</span><span>数据</span><span>写作</span><span>发布</span></div>
+  </section>
+
+  <section class="uses-intro">
+    <p>这不是一份追逐新工具的清单。这里记录的是目前真正进入工作流、反复使用，并且知道为什么选择的东西。</p>
+    <span>LAST REVIEWED / 2026.07</span>
+  </section>
+
+  <section class="uses-grid">
+    <article>
+      <div><span>01</span><p>WEB & PUBLISHING</p></div>
+      <h2>网站与发布</h2>
+      <ul><li><b>Python + Flask</b><span>保持后端结构直接，适合个人内容系统。</span></li><li><b>SQLite</b><span>单机博客的数据足够轻，备份和迁移也简单。</span></li><li><b>Gunicorn + Nginx</b><span>分别负责应用进程和公网请求入口。</span></li><li><b>SSH Tunnel</b><span>公开阅读，私人编辑；后台不暴露在公网。</span></li></ul>
+    </article>
+    <article>
+      <div><span>02</span><p>DATA & MODELING</p></div>
+      <h2>数据与建模</h2>
+      <ul><li><b>Python</b><span>清洗、验证、建模和可复现脚本的主工具。</span></li><li><b>CSV + JSON</b><span>一个面向表格与人工检查，一个保留机器可读证据。</span></li><li><b>质量报告</b><span>记录重复、冲突、异常和未知组合，而不是只交付结果。</span></li><li><b>基线 → 优化</b><span>先证明简单方法成立，再增加模型复杂度。</span></li></ul>
+    </article>
+    <article>
+      <div><span>03</span><p>DATABASE & RELIABILITY</p></div>
+      <h2>数据库与可靠性</h2>
+      <ul><li><b>SQL Server</b><span>用于事务、锁、存储过程和并发控制实验。</span></li><li><b>pyodbc</b><span>连接 Python 测试脚本与数据库业务过程。</span></li><li><b>压力测试</b><span>把“不超卖”等业务规则变成可重复验证的不变量。</span></li><li><b>约束兜底</b><span>应用逻辑负责协调，数据库约束阻止最坏结果。</span></li></ul>
+    </article>
+    <article>
+      <div><span>04</span><p>WRITING & DELIVERY</p></div>
+      <h2>写作与交付</h2>
+      <ul><li><b>Markdown</b><span>正文保持可读、可迁移，也方便版本记录。</span></li><li><b>中文导出层</b><span>内部字段服务计算，中文表头服务最终阅读。</span></li><li><b>UTF-8 BOM</b><span>让中文 CSV 能被 Excel 直接正确打开。</span></li><li><b>RSS</b><span>不依赖平台推荐，让更新可以被主动订阅。</span></li></ul>
+    </article>
+  </section>
+
+  <section class="uses-current">
+    <div><p>CURRENT STACK</p><h2>当前高频使用</h2></div>
+    <div>{% for skill in skills %}<span>{{ skill }}</span>{% endfor %}</div>
+  </section>
+
+  <section class="uses-rule">
+    <span>●</span><p>如果一个工具不能减少错误、缩短反馈路径，或者让结果更容易解释，它就不应该只因为“流行”进入工作流。</p>
+  </section>
+
+  
+</main>
+</div></div>{% endblock %}

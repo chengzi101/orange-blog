@@ -1,0 +1,12 @@
+{% macro render_comment(comment) %}
+<article class="reader-comment{% if comment.deleted_at %} reader-comment-deleted{% endif %}" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}" data-comment-user-id="{{ comment.user_id }}" data-comment-deleted="{{ '1' if comment.deleted_at else '0' }}">
+  <div class="reader-comment-avatar" aria-hidden="true">{% if comment.avatar_url %}<img src="{{ comment.avatar_url }}" alt="" width="36" height="36">{% else %}{{ comment.nickname[:1] }}{% endif %}</div>
+  <div class="reader-comment-body">
+    <div class="reader-comment-meta"><strong>{{ comment.nickname }}</strong>{% if comment.is_owner %}<span class="reader-owner-badge is-owner">博主</span>{% elif comment.custom_title %}<span class="reader-owner-badge">{{ comment.custom_title }}</span>{% endif %}<time datetime="{{ comment.created_at }}">{{ comment.created_at|replace('T',' ')|replace('+00:00',' UTC') }}</time></div>
+    {% if comment.reply_to_nickname %}<div class="reader-reply-target">回复 @{{ comment.reply_to_nickname }}</div>{% endif %}
+    <p>{{ comment.content }}</p>
+    {% if not comment.deleted_at %}<div class="reader-comment-actions"><button type="button" class="reader-reply-button" data-reply-to="{{ comment.id }}" data-reply-nickname="{{ comment.nickname }}">回复</button><button type="button" class="reader-comment-like" data-comment-like="{{ comment.id }}" aria-pressed="{{ 'true' if comment.liked else 'false' }}"><span data-comment-like-label>{{ '已点赞' if comment.liked else '点赞' }}</span> <b data-comment-like-count>{{ comment.like_count }}</b></button><button type="button" class="reader-delete-button" data-delete-comment="{{ comment.id }}" {% if not comment.can_delete %}hidden{% endif %}>删除</button></div>{% endif %}
+    {% if comment.floor %}<div class="reader-comment-floor">{{ comment.floor }} 楼</div>{% endif %}
+  </div>
+</article>
+{% endmacro %}

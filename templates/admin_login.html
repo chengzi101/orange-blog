@@ -1,0 +1,18 @@
+{% extends "admin_base.html" %}
+{% block title %}登录｜Orange 管理后台{% endblock %}
+{% block header %}{% endblock %}
+{% block body %}
+<main class="login-page" id="admin-content">
+  <button type="button" class="admin-theme-button" data-admin-theme-toggle>☾ 深色模式</button><section class="login-card">
+    <div class="login-mark"><img src="/static/orange-avatar-20261017.png" alt="Orange"><span>Orange手记 · 后台</span></div>
+    <h1>欢迎回来</h1>
+    <p>登录后编辑和发布你的文章。</p>
+    <form method="post" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>用户名<input name="username" autocomplete="username" required autofocus></label>
+      <label>密码<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="primary-button" type="submit">进入后台</button>
+    </form><div class="login-footer"><a href="/">← 返回博客</a><span>CONTENT STUDIO</span></div>
+  </section>
+</main>
+{% endblock %}
