@@ -209,7 +209,7 @@
       state.textContent = label;
     };
     const editor = trackedForm.matches('[data-editor-form]');
-    const fields = trackedForm.hasAttribute('data-project-editor') ? ['title', 'summary', 'content', 'slug', 'year', 'stack', 'status', 'link', 'sort_order', 'is_featured', 'is_visible', 'content_format'] : ['title', 'excerpt', 'content', 'slug', 'category', 'tags', 'status', 'is_featured', 'content_format'];
+    const fields = trackedForm.hasAttribute('data-project-editor') ? ['title', 'summary', 'content', 'slug', 'year', 'stack', 'status', 'link', 'sort_order', 'is_featured', 'is_visible', 'content_format'] : ['title', 'excerpt', 'content', 'slug', 'category', 'tags', 'status', 'is_featured', 'content_format', 'cover_image', 'cover_position'];
     const snapshot = () => Object.fromEntries(fields.map(name => {
       const node = trackedForm.elements.namedItem(name);
       return [name, node?.type === 'checkbox' ? (node.checked ? '1' : '') : (node?.value || (name === 'content_format' ? 'markdown' : ''))];
@@ -265,6 +265,8 @@
           try { saved = JSON.parse(localStorage.getItem(key)); } catch { continue; }
           if (saved?.version !== 1 || !saved.fields || !Number.isFinite(saved.updatedAt)) continue;
           if (saved.fields.content_format === undefined) saved.fields.content_format = 'markdown';
+          if (saved.fields.cover_position === undefined && fields.includes('cover_position')) saved.fields.cover_position = serverFields.cover_position;
+          if (saved.fields.cover_image === undefined && fields.includes('cover_image')) saved.fields.cover_image = serverFields.cover_image;
           if (!fields.every(name => typeof saved.fields[name] === 'string')) continue;
           if (equal(saved.fields, serverFields)) { removeDraft(key); continue; }
           candidates.push({key, ...saved});
@@ -305,6 +307,7 @@
         recoveredKeys.add(candidate.key);
         candidates = candidates.filter(item => item !== candidate);
         showRecovery();
+        trackedForm.dispatchEvent(new Event('orange-draft-restored'));
         content.dispatchEvent(new Event('input', {bubbles: true}));
         setState('dirty', '已恢复本机草稿，请点击保存');
         draftStatus.textContent = storageFailed ? '本机备份失败，请先下载草稿' : '已恢复本机草稿，尚未保存到服务器';
@@ -358,9 +361,9 @@
     trackedForm.addEventListener('submit', async (event) => {
       const target = event.submitter?.getAttribute('formtarget');
       if (target === '_blank') {
-        if (imageUploads.size) {
+        if (imageUploads.size || Number(trackedForm.dataset.coverUploading)) {
           event.preventDefault();
-          showToast('截图尚未上传完成，请重试或移除后再预览');
+          showToast('图片尚未上传完成，请重试或移除后再预览');
         }
         return;
       }
@@ -372,9 +375,9 @@
       }
       event.preventDefault();
       if (saving) return;
-      if (imageUploads.size) {
-        setState('dirty', '请先完成截图上传，或移除未上传的截图后保存');
-        showToast('还有截图未上传完成，可重试或下载截图');
+      if (imageUploads.size || Number(trackedForm.dataset.coverUploading)) {
+        setState('dirty', '请先完成图片上传，或移除未上传的图片后保存');
+        showToast('还有图片未上传完成，请等待上传结束');
         return;
       }
       saving = true;

@@ -56,6 +56,9 @@ python -m venv .venv
 每次新开 PowerShell 时设置本地环境变量。下面生成全新的随机密钥，并交互输入本地管理员密码；不要使用生产密钥、密码或数据库。
 
 ```powershell
+$env:ORANGE_ENV = 'development'
+$env:ORANGE_SMS_MODE = 'mock'
+$env:ORANGE_GAME_CLIENT_SECRET = & .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
 $env:ORANGE_SECRET_KEY = & .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"
 $env:ORANGE_ADMIN_USER = 'local-admin'
 $env:ORANGE_ADMIN_PASSWORD_HASH = & .\.venv\Scripts\python.exe -c "from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass('Local admin password: ')))"
@@ -69,7 +72,7 @@ $env:ORANGE_TRUSTED_HOSTS = 'localhost,127.0.0.1'
 
 `SESSION_COOKIE_SECURE=False` 仅在这次本地 HTTP 进程中生效，方便浏览器保存登录会话；不要用于生产 HTTPS 配置。不要直接把示例密码占位符当作密码哈希。
 
-应用不自动读取 `.env` 或 `.env.example`；复制文件不会设置环境变量。`ORANGE_SECRET_KEY` 必须显式提供至少 32 字节，缺失时应用拒绝启动。每次随机生成密钥会使旧会话失效。
+应用不自动读取 `.env` 或 `.env.example`；复制文件不会设置环境变量。`ORANGE_SECRET_KEY` 必须显式提供至少 32 字节，缺失时应用拒绝启动。本地统一账号使用模拟短信，并单独生成至少 32 个字符的 `ORANGE_GAME_CLIENT_SECRET`。每次随机生成会话密钥会使旧会话失效。
 
 ## 可选功能与数据边界
 
@@ -89,7 +92,7 @@ git diff --cached --stat
 git diff --cached --name-only
 ```
 
-本仓库暂不包含自动部署。GitHub 推送不会自动修改线上服务。`deploy/` 仅是维护任务模板，不是完整生产环境配置；配置生产环境或迁移既有数据应另行审查。
+先在本地验证，将本次改动提交并推送到 GitHub，再从已推送的版本部署到服务器，最后验收线上页面和相关功能。服务器部署目前由手动触发。`deploy/` 仅是维护任务模板，不是完整生产环境配置；配置生产环境或迁移既有数据应另行审查。
 
 `README_读者互动.md` 和 `AUTH_SECURITY.md` 保留原有专题记录，其中的历史部署命令与旧限制不一定反映所有后续改动；当前行为以源码和本 README 的启动说明为准。
 

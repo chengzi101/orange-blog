@@ -1,9 +1,9 @@
 {% extends "redefine_base.html" %}
 {% block title %}个人中心｜Orange手记{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='redefine/profile.css') }}?v=20261019-profile-v1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='redefine/profile.css') }}?v=20261028-profile-heading-v1">{% endblock %}
 {% block content %}
 <div class="main-content reader-profile">
-  <header class="profile-heading"><div><p class="reader-eyebrow">ORANGE · MY ACCOUNT</p><h1>个人中心</h1><p>管理你的资料，回看留下的每一个想法。</p></div><a href="/articles" data-no-pjax>返回阅读 ↗</a></header>
+  <header class="profile-heading"><div><p class="reader-eyebrow">ORANGE · MY ACCOUNT</p><h1>个人中心</h1><p>管理你的资料，回看留下的每一个想法。</p></div><nav class="profile-heading-actions" aria-label="个人中心导航"><a href="/articles" data-no-pjax>返回阅读 ↗</a></nav></header>
   {% if error %}<p class="reader-error profile-notice" role="alert">{{ error }}</p>{% endif %}
   {% if notice %}<p class="profile-notice" role="status">{{ notice }}</p>{% endif %}
   <div class="profile-grid">
@@ -14,19 +14,29 @@
       <a class="profile-comment-jump" href="#my-comments">我的评论 <strong>{{ total }}</strong></a>
     </aside>
     <div class="profile-settings">
-      <section class="profile-card"><p class="reader-eyebrow">PROFILE</p><h2>账户昵称</h2><p class="profile-help">昵称不可重复，也用于登录。每个账号仅可自行修改一次，已有评论会同步显示新昵称。</p><p class="profile-help" data-nickname-limit>{% if account.nickname_change_used %}已用完 1 次昵称修改机会。如需再次修改，请联系管理员修改。{% else %}剩余 1 次修改机会，请谨慎确认。{% endif %}</p>
+      <section class="profile-card profile-nickname"><p class="reader-eyebrow">PROFILE</p><h2>账户昵称</h2><p class="profile-help">昵称不可重复，也用于登录。每个账号仅可自行修改一次，已有评论会同步显示新昵称。</p><p class="profile-help" data-nickname-limit>{% if account.nickname_change_used %}已用完 1 次昵称修改机会。如需再次修改，请联系管理员修改。{% else %}剩余 1 次修改机会，请谨慎确认。{% endif %}</p>
         <form method="post" action="/account" class="profile-form"><input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf><input type="hidden" name="action" value="nickname">
           <label for="nickname">昵称</label><input id="nickname" name="nickname" value="{{ account.nickname }}" maxlength="24" required autocomplete="username" {% if account.nickname_change_used %}readonly{% endif %}><button class="reader-primary" type="submit" {% if account.nickname_change_used %}disabled title="请联系管理员修改"{% endif %}>保存昵称</button>
         </form>
       </section>
-      <section class="profile-card"><p class="reader-eyebrow">SECURITY</p><h2>修改密码</h2><p class="profile-help">必须验证旧密码。修改成功后，其他设备需重新登录。</p>
+      <section class="profile-card profile-password"><p class="reader-eyebrow">SECURITY</p><h2>修改密码</h2><p class="profile-help">必须验证旧密码。修改成功后，其他设备需重新登录。</p>
         <form method="post" action="/account" class="profile-form"><input type="hidden" name="csrf_token" value="{{ reader_csrf_token() }}" data-reader-csrf><input type="hidden" name="action" value="password">
           <label for="old-password">旧密码</label><input id="old-password" name="old_password" type="password" required maxlength="128" autocomplete="current-password">
-          <div class="profile-password-grid"><div><label for="new-password">新密码</label><input id="new-password" name="new_password" type="password" required minlength="8" maxlength="24" autocomplete="new-password" placeholder="8–24 个字符"></div><div><label for="confirm-password">确认新密码</label><input id="confirm-password" name="confirm_password" type="password" required minlength="8" maxlength="24" autocomplete="new-password"></div></div>
+          <div class="profile-password-grid"><div><label for="new-password">新密码</label><input id="new-password" name="new_password" type="password" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="10–128 个字符"></div><div><label for="confirm-password">确认新密码</label><input id="confirm-password" name="confirm_password" type="password" required minlength="10" maxlength="128" autocomplete="new-password"></div></div>
           <button class="reader-primary" type="submit">修改密码</button>
         </form>
       </section>
     </div>
+    <section class="profile-card profile-phone" id="phone-security" aria-labelledby="phone-security-title">
+      <p class="reader-eyebrow">PHONE</p><h2 id="phone-security-title">更换手机号</h2>
+      {% if phone_error %}<p class="reader-error profile-help" role="alert">{{ phone_error }}</p>{% endif %}
+      {% if request.args.get('phone') == 'changed' and account.phone_change_used %}<p class="profile-help" role="status">手机号已更换。</p>{% endif %}
+      {% if account.phone and account.phone_verified_at %}
+      <p class="profile-help">当前手机：{{ account.phone[:3] }}****{{ account.phone[-4:] }}</p>
+      <p class="profile-help" data-phone-limit>{% if account.phone_change_used %}已用完 1 次手机号更换机会。{% else %}每个账号只可更换一次{% endif %}</p>
+      {% if not account.phone_change_used %}{% include '_phone_change_form.html' %}{% endif %}
+      {% else %}<p class="profile-help">请先绑定手机号，绑定不占用更换机会。</p><a class="reader-primary profile-phone-bind" href="/auth/upgrade" data-no-pjax>绑定手机号</a>{% endif %}
+    </section>
   </div>
   <section class="profile-card profile-comments" id="my-comments" aria-labelledby="my-comments-title"><div class="profile-comments-heading"><h2 id="my-comments-title">我的评论</h2><span>共 {{ total }} 条 · 包含所有审核状态</span></div>
     {% for comment in comments %}<article class="profile-comment" data-my-comment="{{ comment.id }}"><div class="profile-comment-meta"><span class="profile-comment-status">{{ {'approved':'已发表','pending':'待审核','rejected':'未通过'}.get(comment.status, '待审核') }}</span><time datetime="{{ comment.created_at }}">{{ comment.created_at|replace('T',' ')|replace('+00:00',' UTC') }}</time>{% if comment.parent_id %}<span>回复</span>{% endif %}</div><p>{{ comment.content }}</p>
@@ -36,3 +46,4 @@
   </section>
 </div>
 {% endblock %}
+{% block scripts %}<script defer src="/static/unified-auth.js"></script>{% endblock %}

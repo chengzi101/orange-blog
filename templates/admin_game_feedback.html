@@ -1,0 +1,161 @@
+{% extends "admin_base.html" %}
+{% block title %}意见反馈｜Orange 管理后台{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/game-chat-admin.css?v=20261028-2"><meta name="csrf-token" content="{{ csrf_token() }}">{% endblock %}
+{% block body %}
+<main class="admin-main game-chat-admin" id="admin-content" data-section="feedback">
+ <header class="gc-heading"><div><p class="gc-eyebrow">游戏反馈 / 玩家留言</p><h1>意见反馈</h1><p>玩家在游戏里提交的问题、建议和内容纠错；处理后可以留一条备注。</p></div><span class="gc-service" id="service-state">正在连接反馈服务…</span></header>
+ <div id="status" role="status" aria-live="polite"></div>
+ <div id="dashboard" data-api="/admin/game-feedback/api">
+  <section class="gc-stats" aria-label="反馈概览"><article><span>全部</span><strong id="stat-total">—</strong><small>按提交时间倒序</small></article><article><span>待处理</span><strong id="stat-open">—</strong><small>还没处理</small></article><article><span>已处理</span><strong id="stat-done">—</strong><small>已修复或已回复</small></article><article><span>已忽略</span><strong id="stat-ignored">—</strong><small>重复或无效</small></article></section>
+  <div class="gc-workspace">
+   <section class="gc-card gc-messages">
+    <div class="gc-card-heading"><h2>反馈列表</h2><div><label class="gc-inline"><input id="auto-refresh" type="checkbox" checked>每 10 秒刷新</label><button id="refresh" type="button">刷新</button></div></div>
+    <form id="filters" class="gc-filters"><label>处理状态<select name="status"><option value="">全部状态</option><option value="open">待处理</option><option value="done">已处理</option><option value="ignored">已忽略</option></select></label><label>关键词<input name="q" placeholder="搜索内容、玩家或联系方式" maxlength="60"></label><button class="gc-primary">筛选</button><button type="reset">重置</button></form>
+    <div class="gc-table-wrap"><table><thead><tr><th>时间 / 玩家</th><th class="gc-content-col">反馈内容</th><th>类型</th><th>状态</th><th>操作</th></tr></thead><tbody id="feedback-list"></tbody></table></div>
+    <div class="gc-pager"><span id="feedback-count">正在加载…</span><button id="prev">上一页</button><button id="next">下一页</button></div>
+   </section>
+   <aside class="gc-card gc-detail" aria-label="反馈详情与处理"><div class="gc-card-heading"><h2>反馈详情</h2><button id="close-detail" type="button" hidden>收起</button></div><div id="feedback-detail"><p class="gc-empty">选择一条反馈，查看完整内容与设备信息。</p></div></aside>
+  </div>
+ </div>
+ <footer class="gc-footer">游戏反馈由游戏服务保存，后台只读转发；删除后不可恢复。</footer>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const root = document.getElementById('dashboard');
+  const API = root.dataset.api;
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const CATEGORY = {bug: 'bug', idea: '建议', content: '内容', other: '其他'};
+  const STATUS = {open: '待处理', done: '已处理', ignored: '已忽略'};
+  const state = {items: [], total: 0, offset: 0, limit: 30, selected: null};
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]));
+  const when = value => {
+    const date = new Date(Number(value));
+    return Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN', {month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '—';
+  };
+  const notify = (text, bad) => {
+    const box = $('status');
+    box.textContent = text || '';
+    box.className = bad ? 'gc-status is-error' : 'gc-status';
+    if (text) setTimeout(() => { if (box.textContent === text) { box.textContent = ''; box.className = 'gc-status'; } }, 4000);
+  };
+  const api = async (path, options = {}) => {
+    const response = await fetch(API + path, {
+      cache: 'no-store',
+      ...options,
+      headers: {'X-CSRF-Token': CSRF, ...(options.body ? {'Content-Type': 'application/json'} : {}), ...(options.headers || {})},
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.error || '请求失败（' + response.status + '）');
+    return data;
+  };
+
+  async function load() {
+    const params = new URLSearchParams(new FormData($('filters')));
+    params.set('limit', state.limit);
+    params.set('offset', state.offset);
+    try {
+      const data = await api('?' + params.toString());
+      state.items = data.items || [];
+      state.total = data.total || 0;
+      $('service-state').textContent = '反馈服务已连接';
+      $('stat-total').textContent = state.total;
+      $('stat-open').textContent = data.counts?.open ?? 0;
+      $('stat-done').textContent = data.counts?.done ?? 0;
+      $('stat-ignored').textContent = data.counts?.ignored ?? 0;
+      renderList();
+      if (state.selected) {
+        const fresh = state.items.find(item => item.id === state.selected);
+        if (fresh) renderDetail(fresh); else { state.selected = null; renderDetail(null); }
+      }
+    } catch (error) {
+      $('service-state').textContent = '反馈服务不可用';
+      notify(error.message, true);
+    }
+  }
+
+  function renderList() {
+    const body = $('feedback-list');
+    if (!state.items.length) {
+      body.innerHTML = '<tr><td colspan="5" class="gc-empty">没有符合条件反馈。</td></tr>';
+    } else {
+      body.innerHTML = state.items.map(item => `<tr data-id="${esc(item.id)}" class="${item.status === 'open' ? 'is-open' : ''}">
+        <td>${esc(when(item.createdAt))}<br><small>${esc(item.player || '未登录')}</small></td>
+        <td class="gc-content-col">${esc(String(item.text).slice(0, 80))}${String(item.text).length > 80 ? '…' : ''}</td>
+        <td>${esc(CATEGORY[item.category] || item.category)}</td>
+        <td><span class="gc-badge gc-badge-${esc(item.status)}">${esc(STATUS[item.status] || item.status)}</span></td>
+        <td><button type="button" data-open="${esc(item.id)}">详情</button></td></tr>`).join('');
+    }
+    const from = state.total ? state.offset + 1 : 0;
+    $('feedback-count').textContent = `第 ${from}–${Math.min(state.offset + state.items.length, state.total)} 条，共 ${state.total} 条`;
+    $('prev').disabled = state.offset === 0;
+    $('next').disabled = state.offset + state.limit >= state.total;
+  }
+
+  function renderDetail(item) {
+    const box = $('feedback-detail');
+    $('close-detail').hidden = !item;
+    if (!item) { box.innerHTML = '<p class="gc-empty">选择一条反馈，查看完整内容与设备信息。</p>'; return; }
+    box.innerHTML = `
+      <dl class="gc-meta">
+        <div><dt>提交时间</dt><dd>${esc(new Date(Number(item.createdAt)).toLocaleString('zh-CN'))}</dd></div>
+        <div><dt>类型</dt><dd>${esc(CATEGORY[item.category] || item.category)}</dd></div>
+        <div><dt>玩家</dt><dd>${esc(item.player || '未登录')}</dd></div>
+        <div><dt>场景</dt><dd>${esc(item.scene || '—')}</dd></div>
+        <div><dt>联系方式</dt><dd>${esc(item.contact || '—')}</dd></div>
+        <div><dt>来源</dt><dd>${esc(item.ip || '—')}</dd></div>
+        <div><dt>状态</dt><dd><span class="gc-badge gc-badge-${esc(item.status)}">${esc(STATUS[item.status] || item.status)}</span></dd></div>
+      </dl>
+      <pre class="gc-feedback-text">${esc(item.text)}</pre>
+      <label class="gc-inline">备注<input id="note" maxlength="300" value="${esc(item.note || '')}" placeholder="处理说明，只有后台可见"></label>
+      <div class="gc-actions">
+        <button type="button" class="gc-primary" data-status="done">标记已处理</button>
+        <button type="button" data-status="ignored">标记忽略</button>
+        <button type="button" data-status="open">重新打开</button>
+        <button type="button" class="gc-danger" data-delete>删除</button>
+      </div>
+      <p class="gc-hint">UA：${esc(item.agent || '—')}</p>`;
+    box.querySelectorAll('[data-status]').forEach(button => button.addEventListener('click', () => setStatus(item.id, button.dataset.status)));
+    box.querySelector('[data-delete]').addEventListener('click', () => remove(item.id));
+  }
+
+  async function setStatus(id, status) {
+    const note = $('note')?.value || '';
+    try {
+      await api(`/${id}/status`, {method: 'POST', body: JSON.stringify({status, note})});
+      notify('已更新为「' + (STATUS[status] || status) + '」');
+      await load();
+    } catch (error) { notify(error.message, true); }
+  }
+
+  async function remove(id) {
+    if (!window.confirm('删除后不可恢复，确定删除这条反馈？')) return;
+    try {
+      await api(`/${id}`, {method: 'DELETE'});
+      state.selected = null;
+      notify('已删除');
+      await load();
+    } catch (error) { notify(error.message, true); }
+  }
+
+  $('feedback-list').addEventListener('click', event => {
+    const button = event.target.closest('[data-open]');
+    if (!button) return;
+    const item = state.items.find(row => row.id === button.dataset.open);
+    if (!item) return;
+    state.selected = item.id;
+    renderDetail(item);
+  });
+  $('close-detail').addEventListener('click', () => { state.selected = null; renderDetail(null); });
+  $('filters').addEventListener('submit', event => { event.preventDefault(); state.offset = 0; state.selected = null; renderDetail(null); load(); });
+  $('filters').addEventListener('reset', () => { setTimeout(() => { state.offset = 0; state.selected = null; renderDetail(null); load(); }); });
+  $('prev').addEventListener('click', () => { state.offset = Math.max(0, state.offset - state.limit); load(); });
+  $('next').addEventListener('click', () => { state.offset += state.limit; load(); });
+  $('refresh').addEventListener('click', load);
+  setInterval(() => { if ($('auto-refresh').checked && !document.hidden) load(); }, 10000);
+  load();
+})();
+</script>
+{% endblock %}

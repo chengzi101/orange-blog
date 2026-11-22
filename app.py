@@ -24,6 +24,7 @@ from runtime_security import runtime_security_config, TrustedHostMiddleware
 import bleach
 import markdown
 from markdown.blockprocessors import ParagraphProcessor
+from article_features import ArticleMarkdown, init_cover_schema, valid_cover, post_cover, valid_cover_position, cover_position
 from latex_renderer import LatexRenderError, latex_bundle
 from community import init_community, install_community, snapshot_post_community, restore_post_community
 from project_community import snapshot_project_community, restore_project_community
@@ -157,6 +158,8 @@ def init_db() -> None:
     )
     init_community(db)
     init_auth_schema(db)
+    from unified_schema import migrate
+    migrate(db)
     existing_columns = {
         row["name"] for row in db.execute("PRAGMA table_info(posts)").fetchall()
     }
@@ -256,6 +259,7 @@ def init_db() -> None:
         except sqlite3.OperationalError as error:
             if 'duplicate column name' not in str(error).lower():
                 raise
+    init_cover_schema(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS daily_stats (
@@ -942,7 +946,7 @@ TRASH_TYPES = {
         "title": "title",
         "columns": [
             "id", "title", "slug", "excerpt", "content", "tags", "category",
-            "is_featured", "views", "status", "published_at", "created_at", "updated_at", "content_format",
+            "is_featured", "views", "status", "published_at", "created_at", "updated_at", "content_format", "cover_image", "cover_position",
         ],
     },
     "project": {
@@ -1164,7 +1168,7 @@ def markdown_attribute_allowed(tag: str, name: str, value: str) -> bool:
 
 def markdown_bundle(value: str) -> tuple[str, str]:
     renderer = markdown.Markdown(
-        extensions=["extra", "sane_lists", "tables", "toc"],
+        extensions=["extra", "sane_lists", "tables", "toc", ArticleMarkdown()],
         extension_configs={"toc": {"permalink": False}},
         output_format="html5",
     )
@@ -1555,12 +1559,12 @@ def home():
     page,pages=listing_window(matching)
     posts = get_db().execute(
         f"""SELECT id,title,slug,excerpt,content,tags,category,is_featured,views,
-                   published_at,created_at,updated_at,'post' AS entry_type,0 AS sort_order
+                   published_at,created_at,updated_at,'post' AS entry_type,0 AS sort_order,cover_image,cover_position
             FROM posts WHERE {post_condition}
             UNION ALL
             SELECT id,title,slug,summary AS excerpt,content,stack AS tags,'项目' AS category,
                    is_featured,0 AS views,created_at AS published_at,created_at,updated_at,
-                   'project' AS entry_type,sort_order
+                   'project' AS entry_type,sort_order,'' AS cover_image,'50% 50%' AS cover_position
             FROM projects WHERE {project_condition}
             ORDER BY is_featured DESC,published_at DESC,sort_order DESC,id DESC,entry_type
             LIMIT ? OFFSET ?""",
@@ -1920,7 +1924,7 @@ def colophon():
     return render_template("colophon.html", stats=stats)
 
 
-TOOLBOX_INSTALLERS = {'uu': {'bytes': 92252208, 'icon': 'static/toolbox/uu.png', 'slug': 'uu', 'filename': 'uuyc_4.44.0.exe', 'sha256': '4f1b86d768478ddb923ca13c19c9880976549edc0d26b3c8067c87f7fb4c5379', 'title': 'UU远程', 'size_label': '88.0 MB'}, 'sunlogin': {'bytes': 198984640, 'icon': 'static/toolbox/sunlogin.png', 'slug': 'sunlogin', 'filename': 'AweSun_16.6.0.32198.exe', 'sha256': 'be592d004bc99ce2043ecf29182a173335e8197712dcdec0b013093d38577ba1', 'title': '向日葵远程', 'size_label': '189.8 MB'}, 'todesk': {'bytes': 4144904, 'icon': 'static/toolbox/todesk.png', 'slug': 'todesk', 'filename': 'ToDesk_Installer.exe', 'sha256': '13292a5f3e870a33999f943f5ac2df456aae3c7815bd850b126f0ec60f50b883', 'title': 'ToDesk远程', 'size_label': '4.0 MB'}}
+TOOLBOX_INSTALLERS = {'uu': {'bytes': 98370856, 'icon': 'static/toolbox/uu.png', 'slug': 'uu', 'filename': 'uuyc_4.48.2.exe', 'sha256': '951a8d695c7d1b90fbfe151e9e4f78c8088bed1df77401b2a1c308788bfe4ea1', 'title': 'UU远程', 'size_label': '93.8 MB'}, 'sunlogin': {'bytes': 98196416, 'icon': 'static/toolbox/sunlogin.png', 'slug': 'sunlogin', 'filename': 'AweSun_16.8.0.33445_x64.exe', 'sha256': 'd1003f291088e024932e4d4de19e4dcf2da282dd8fc1c0153402e562583d0cb7', 'title': '向日葵远程', 'size_label': '93.6 MB'}, 'todesk': {'bytes': 3293184, 'icon': 'static/toolbox/todesk.png', 'slug': 'todesk', 'filename': 'ToDesk_Installer_1004.exe', 'sha256': 'dd11d9ccbe95a4b72c0f15d3ad21a9beeecfb507c5673b11fbbfa704680bbd68', 'title': 'ToDesk远程', 'size_label': '3.1 MB'}}
 
 
 @app.get("/toolbox")
@@ -2378,6 +2382,19 @@ def save_post(post_id: int | None = None):
         else:
             excerpt = plain_excerpt(content)
     db = get_db()
+    old = db.execute("SELECT * FROM posts WHERE id = ?", (post_id,)).fetchone() if post_id is not None else None
+    cover_image = request.form.get('cover_image', old['cover_image'] if old else '').strip()
+    if not valid_cover(cover_image):
+        if request.headers.get('X-Orange-Save') == '1':
+            return {'ok': False, 'message': '请选择有效的封面图片。'}, 422
+        flash('请选择有效的封面图片。', 'error')
+        return None
+    position = request.form.get('cover_position', cover_position(old)).strip()
+    if not valid_cover_position(position):
+        if request.headers.get('X-Orange-Save') == '1':
+            return {'ok': False, 'message': '请选择有效的封面位置。'}, 422
+        flash('请选择有效的封面位置。', 'error')
+        return None
     timestamp = now_iso()
     try:
         if post_id is None:
@@ -2386,11 +2403,11 @@ def save_post(post_id: int | None = None):
                 """
                 INSERT INTO posts
                 (title, slug, excerpt, content, content_format, tags, category, is_featured, views,
-                 status, published_at, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+                 status, published_at, created_at, updated_at, cover_image, cover_position)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
                 """,
                 (title, slug, excerpt, content, content_format, tags, category, is_featured,
-                 status, published_at, timestamp, timestamp),
+                 status, published_at, timestamp, timestamp, cover_image, position),
             )
             post_id = db.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
         else:
@@ -2399,13 +2416,13 @@ def save_post(post_id: int | None = None):
                 abort(404)
             if not request.form.get("slug", "").strip():
                 slug = old['slug']
-            if old["title"] != title or old["excerpt"] != excerpt or old["content"] != content or old['content_format'] != content_format:
+            if old["title"] != title or old["excerpt"] != excerpt or old["content"] != content or old['content_format'] != content_format or old['cover_image'] != cover_image or old['cover_position'] != position:
                 db.execute(
                     """
-                    INSERT INTO post_revisions (post_id, title, excerpt, content, created_at, content_format)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO post_revisions (post_id, title, excerpt, content, created_at, content_format, cover_image, cover_position)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (post_id, old["title"], old["excerpt"], old["content"], timestamp, old['content_format']),
+                    (post_id, old["title"], old["excerpt"], old["content"], timestamp, old['content_format'], old['cover_image'], old['cover_position']),
                 )
                 prune_post_revisions(db, post_id)
             published_at = old["published_at"]
@@ -2414,11 +2431,11 @@ def save_post(post_id: int | None = None):
             db.execute(
                 """
                 UPDATE posts SET title=?, slug=?, excerpt=?, content=?, content_format=?, tags=?,
-                    category=?, is_featured=?, status=?, published_at=?, updated_at=?
+                    category=?, is_featured=?, status=?, published_at=?, updated_at=?, cover_image=?, cover_position=?
                 WHERE id=?
                 """,
                 (title, slug, excerpt, content, content_format, tags, category, is_featured,
-                 status, published_at, timestamp, post_id),
+                 status, published_at, timestamp, cover_image, position, post_id),
             )
         if is_featured:
             saved_id = post_id or db.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
@@ -2480,11 +2497,19 @@ def admin_preview():
         article_html, article_toc = article_bundle(content, content_format)
     except LatexRenderError as error:
         return render_template('admin_preview_error.html', message=str(error)), 422
+    cover_image = request.form.get('cover_image', '').strip()
+    if not valid_cover(cover_image):
+        return render_template('admin_preview_error.html', message='请选择有效的封面图片。'), 422
+    position = request.form.get('cover_position', '50% 50%').strip()
+    if not valid_cover_position(position):
+        return render_template('admin_preview_error.html', message='请选择有效的封面位置。'), 422
     preview_time = now_iso()
     preview = SimpleNamespace(
         title=request.form.get("title", "").strip() or "未命名文章",
         excerpt=request.form.get("excerpt", "").strip() or plain_excerpt(content),
         content=content,
+        cover_image=cover_image,
+        cover_position=position,
         content_format=content_format,
         tags=request.form.get("tags", ""),
         category=request.form.get("category", "").strip() or "随笔",
@@ -2851,12 +2876,12 @@ def admin_revision_restore(revision_id: int):
         abort(404)
     timestamp = now_iso()
     db.execute(
-        "INSERT INTO post_revisions (post_id, title, excerpt, content, created_at, content_format) VALUES (?, ?, ?, ?, ?, ?)",
-        (current["id"], current["title"], current["excerpt"], current["content"], timestamp, current['content_format']),
+        "INSERT INTO post_revisions (post_id, title, excerpt, content, created_at, content_format, cover_image, cover_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (current["id"], current["title"], current["excerpt"], current["content"], timestamp, current['content_format'], current['cover_image'], current['cover_position']),
     )
     db.execute(
-        "UPDATE posts SET title=?, excerpt=?, content=?, content_format=?, updated_at=? WHERE id=?",
-        (revision["title"], revision["excerpt"], revision["content"], revision['content_format'], timestamp, current["id"]),
+        "UPDATE posts SET title=?, excerpt=?, content=?, content_format=?, updated_at=?, cover_image=?, cover_position=? WHERE id=?",
+        (revision["title"], revision["excerpt"], revision["content"], revision['content_format'], timestamp, revision['cover_image'], revision['cover_position'], current["id"]),
     )
     prune_post_revisions(db, current["id"])
     log_admin_action("恢复文章历史版本", "post", current["title"])
@@ -2958,6 +2983,10 @@ def admin_trash_restore(trash_id: int):
     row_data = {column: payload.get(column) for column in config["columns"]}
     if item['item_type'] == 'post' and not row_data.get('content_format'):
         row_data['content_format'] = 'markdown'
+    if item['item_type'] == 'post' and not row_data.get('cover_image'):
+        row_data['cover_image'] = ''
+    if item['item_type'] == 'post':
+        row_data['cover_position'] = cover_position(row_data)
     columns = list(row_data)
     try:
         db.execute(
@@ -2969,8 +2998,8 @@ def admin_trash_restore(trash_id: int):
                 db.execute(
                     """
                     INSERT INTO post_revisions
-                    (post_id, title, excerpt, content, created_at, content_format)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    (post_id, title, excerpt, content, created_at, content_format, cover_image, cover_position)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         row_data["id"],
@@ -2979,6 +3008,8 @@ def admin_trash_restore(trash_id: int):
                         revision.get("content", ""),
                         revision.get("created_at", now_iso()),
                         revision.get('content_format', 'markdown'),
+                        revision.get('cover_image', ''),
+                        cover_position(revision),
                     ),
                 )
             prune_post_revisions(db, row_data["id"])
@@ -3050,6 +3081,9 @@ def admin_trash_empty():
 
 
 # Redefine theme integration; public content only.
+app.add_template_filter(cover_position, "cover_position")
+
+
 @app.template_filter("cover_image")
 def theme_cover_image(content):
     match = re.search(r"!\[[^\]]*\]\(([^\s)]+)", str(content or ""))
@@ -3057,6 +3091,11 @@ def theme_cover_image(content):
         return ""
     candidate = match.group(1)
     return candidate if candidate.startswith("/") and not candidate.startswith("//") or candidate.startswith("https://") else ""
+
+
+@app.template_filter("post_cover")
+def theme_post_cover(post):
+    return post_cover(post, theme_cover_image)
 
 
 @app.context_processor
@@ -3132,9 +3171,18 @@ def security_response_headers(response):
 
 
 install_community(app, get_db, now_iso, visitor_fingerprint, classify_client)
+from unified_accounts import install_unified
+install_unified(app, get_db, now_iso)
 
 from latex_workbench import install_latex_workbench, project_workspace_id
 install_latex_workbench(app, get_db, admin_required, validate_csrf, now_iso, DB_PATH, UPLOAD_DIR)
+
+
+from game_chat_admin import install_game_chat_admin
+install_game_chat_admin(app, admin_required, csrf_token)
+
+from game_feedback import install_game_feedback_admin
+install_game_feedback_admin(app, admin_required, csrf_token)
 
 
 if __name__ == "__main__":

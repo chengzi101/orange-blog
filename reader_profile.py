@@ -6,7 +6,7 @@ import secrets
 import sqlite3
 import unicodedata
 from flask import Blueprint, abort, g, redirect, render_template, request, send_file, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
+from unified_passwords import check_password_hash, generate_password_hash
 
 
 def init_profile(db):
@@ -22,7 +22,7 @@ def init_profile(db):
 def avatar_url(user_id, key, is_owner=False):
     if key and re.fullmatch('[0-9a-f]{64}', key):
         return url_for('profile.avatar', user_id=user_id, key=key)
-    return '/static/orange-avatar-20261017.png' if is_owner else None
+    return '/static/orange-avatar-20261120.jpg' if is_owner else None
 
 
 def install_profile(app, get_db, now_iso, current_user, csrf, validate_token, throttle, error):
@@ -31,9 +31,9 @@ def install_profile(app, get_db, now_iso, current_user, csrf, validate_token, th
                'nickname_unchanged':'昵称未改变，未使用修改次数。',
                'password':'密码已修改，其他设备的旧登录已失效。'}
 
-    def page(user, message='', code=200):
+    def page(user, message='', code=200, phone_error=''):
         db = get_db()
-        account = db.execute('SELECT id,nickname,created_at,avatar_key,nickname_change_used FROM reader_users WHERE id=?', (user['id'],)).fetchone()
+        account = db.execute('SELECT id,nickname,created_at,avatar_key,nickname_change_used,phone,phone_verified_at,phone_change_used FROM reader_users WHERE id=?', (user['id'],)).fetchone()
         total = db.execute('SELECT (SELECT count(*) FROM post_comments WHERE user_id=? AND deleted_at IS NULL)+(SELECT count(*) FROM project_comments WHERE user_id=? AND deleted_at IS NULL)', (user['id'],user['id'])).fetchone()[0]
         pages = max(1, math.ceil(total / 20))
         try:
@@ -50,8 +50,10 @@ def install_profile(app, get_db, now_iso, current_user, csrf, validate_token, th
                               'FROM project_comments c LEFT JOIN projects p ON p.id=c.project_id WHERE c.user_id=? AND c.deleted_at IS NULL '
                               ') ORDER BY created_at DESC,id DESC LIMIT 20 OFFSET ?', (user['id'],user['id'], (number-1)*20)).fetchall()
         return render_template('reader_profile.html', account=account, comments=comments, total=total,
-                               page=number, pages=pages, error=message,
+                               page=number, pages=pages, error=message, phone_error=phone_error,
                                notice=notices.get(request.args.get('saved')) if not message else None), code
+
+    app.extensions['reader_profile_page'] = page
 
     @bp.route('/account', methods=['GET', 'POST'])
     def account():
@@ -68,8 +70,19 @@ def install_profile(app, get_db, now_iso, current_user, csrf, validate_token, th
                 raise error('不支持的操作。', 400)
             throttle('profile:'+str(user['id']), 40, 900)
             if action == 'password':
+                from unified_passwords import validate_password
+                try:
+                    validate_password(request.form.get('new_password', ''))
+                except ValueError as exc:
+                    raise error(str(exc), 422)
                 throttle('profile-password:'+str(user['id']), 10, 900)
             nickname = unicodedata.normalize('NFKC', request.form.get('nickname', '')).strip()
+            if action == 'nickname':
+                from unified_passwords import validate_username
+                try:
+                    nickname = validate_username(nickname)
+                except ValueError as exc:
+                    raise error(str(exc), 422)
             if action == 'nickname' and (not 1 <= len(nickname) <= 24 or any(unicodedata.category(c).startswith('C') for c in nickname)):
                 raise error('昵称需为 1–24 个字符，不能包含控制字符。')
             old = request.form.get('old_password', '')
@@ -77,8 +90,8 @@ def install_profile(app, get_db, now_iso, current_user, csrf, validate_token, th
             if action == 'password':
                 if not old or len(old) > 128:
                     raise error('请输入正确的旧密码。', 422)
-                if not 8 <= len(new) <= 24 or new != request.form.get('confirm_password', ''):
-                    raise error('新密码需为 8–24 个字符，且两次输入一致。')
+                if not 10 <= len(new) <= 128 or new != request.form.get('confirm_password', ''):
+                    raise error('新密码需为 10–128 个字符，且两次输入一致。')
                 if new == old:
                     raise error('新密码不能与旧密码相同。')
             with db:

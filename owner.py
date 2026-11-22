@@ -7,7 +7,7 @@ import unicodedata
 from functools import wraps
 
 from flask import abort, flash, redirect, render_template, request, session, url_for
-from werkzeug.security import check_password_hash, generate_password_hash
+from unified_passwords import check_password_hash, generate_password_hash
 from security_helpers import constant_time_text_equal
 
 
@@ -41,6 +41,8 @@ def install_owner(app, get_db, now_iso):
             nickname = unicodedata.normalize('NFKC', request.form.get('nickname', '')).strip()
             password = request.form.get('password', '')
             action = request.form.get('action')
+            if action == 'create':
+                abort(400, '新账号请先通过统一注册完成手机号验证，再绑定为博主。')
             if not 1 <= len(nickname) <= 24 or any(unicodedata.category(c).startswith('C') for c in nickname):
                 error = '昵称需为 1–24 个字符，不能包含控制字符。'
             elif action not in ('create', 'bind'):

@@ -3,9 +3,9 @@
 <html lang="zh-CN">
 
 <head>
-<link rel="icon" type="image/png" sizes="32x32" href="/static/orange-favicon-32-20261019.png">
-<link rel="icon" type="image/x-icon" href="/static/orange-favicon-20261019.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/orange-favicon-180-20261019.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/orange-favicon-32-20261120.png">
+<link rel="icon" type="image/x-icon" href="/static/orange-favicon-20261120.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/orange-favicon-180-20261120.png">
 
 
   <meta charset="utf-8">
@@ -18,7 +18,7 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='admin.css', v='20261018-editor-save') }}">
 
-<link rel="stylesheet" href="/static/admin-redesign.css?v=20261019-comment-notifications"><script>try{document.documentElement.dataset.adminTheme=localStorage.getItem('orange-theme')==='dark'?'dark':'light'}catch{}</script>{% block head %}{% endblock %}</head>
+<link rel="stylesheet" href="/static/admin-redesign.css?v=20261117-cover-position-v1"><link rel="stylesheet" href="/static/game-chat-nav.css?v=20261028-2"><script>try{document.documentElement.dataset.adminTheme=localStorage.getItem('orange-theme')==='dark'?'dark':'light'}catch{}</script>{% block head %}{% endblock %}</head>
 
 <body class="admin-page admin-page-{{ request.endpoint or 'unknown' }}">
 
@@ -30,7 +30,7 @@
 
     <header class="admin-header">
 
-      <a class="admin-brand" href="{{ url_for('admin_dashboard') }}"><img src="/static/orange-avatar-20261017.png" alt=""><div class="admin-brand-name">Orange手记</div></a>
+      <a class="admin-brand" href="{{ url_for('admin_dashboard') }}"><img src="/static/orange-avatar-20261120.jpg" alt=""><div class="admin-brand-name">Orange手记</div></a>
 
       <nav class="admin-nav" aria-label="后台导航">
 
@@ -51,6 +51,12 @@
 
         <a href="{{ url_for('admin_accounts') }}" {% if request.endpoint in ['admin_accounts','admin_account'] %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 22v-3a7 7 0 0 1 14 0v3M17 3a4 4 0 0 1 0 8M19 14a6 6 0 0 1 3 5v3"/></svg><span>前台账户</span></a>
         <a href="{{ url_for('admin_comments') }}" {% if request.endpoint in ['admin_comments','comment_rules'] %}aria-current="page"{% endif %}><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H7l-5 3V11a9 9 0 0 1 19 0Z"/><path d="m8 11 3 3 5-6"/></svg><span>评论审核</span><span class="admin-comment-badge" data-pending-comment-badge data-count-url="{{ url_for('pending_comment_count') }}" role="status" aria-live="polite" aria-atomic="true" {% if not pending_comment_count %}hidden{% endif %} aria-label="{{ pending_comment_count or 0 }} 条评论待审核">{{ '99+' if (pending_comment_count or 0) > 99 else (pending_comment_count or 0) }}</span></a>
+        <details class="game-nav" {% if request.endpoint in ['admin_game_chat','admin_game_chat_rules','admin_game_chat_api','admin_game_feedback'] %}open{% endif %}>
+          <summary><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M21 11a8 8 0 0 1-8 8H7l-5 3V11a9 9 0 0 1 19 0Z"/><path d="M8 9h8M8 13h5"/></svg><span>游戏</span><span class="game-nav-chevron" aria-hidden="true">⌄</span></summary>
+          <a href="{{ url_for('admin_game_chat') }}" {% if request.endpoint == 'admin_game_chat' %}aria-current="page"{% endif %}>聊天管理与判罚</a>
+          <a href="{{ url_for('admin_game_chat_rules') }}" {% if request.endpoint == 'admin_game_chat_rules' %}aria-current="page"{% endif %}>敏感词管理</a>
+          <a href="{{ url_for('admin_game_feedback') }}" {% if request.endpoint == 'admin_game_feedback' %}aria-current="page"{% endif %}>意见反馈</a>
+        </details>
       </nav><div class="admin-sidebar-footer"><form class="admin-logout-form" method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="admin-logout-button" type="submit"><svg class="admin-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>退出</span></button></form><button type="button" class="admin-theme-button" data-admin-theme-toggle>☾ 深色模式</button></div>
 
     </header>
@@ -79,9 +85,9 @@
 
   <div class="admin-toast" role="status" aria-live="polite" data-admin-toast></div>
 
-  <script defer src="{{ url_for('static', filename='admin.js', v='20261021-project-inline-v1') }}"></script>
+  <script defer src="{{ url_for('static', filename='admin.js', v='20261117-cover-position-v1') }}"></script>
 
-<script defer src="/static/editor-images.js?v=20261019-image-size"></script>
+<script defer src="/static/editor-images.js?v=20261104-scroll-stable"></script>
 
 <script defer src="/static/admin-redesign.js?v=20261019-latex-articles"></script><script defer src="/static/comment-notifications.js?v=20261019-1"></script>{% block scripts %}{% endblock %}</body>
 

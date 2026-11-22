@@ -8,8 +8,35 @@
       <div class="editor-primary">
         <label>标题<input name="title" value="{{ post.title if post else '' }}" required placeholder="文章标题" data-title></label>
         <label>摘要 <small>留空时自动从正文生成</small><textarea name="excerpt" rows="3" placeholder="首页显示的简短介绍">{{ post.excerpt if post else '' }}</textarea></label>
+        <section class="editor-cover" data-cover-editor aria-labelledby="editor-cover-title">
+          <input type="hidden" name="cover_image" value="{{ post.cover_image|default('') if post else '' }}">
+          <input type="hidden" name="cover_position" value="{{ post|cover_position }}">
+          <div class="editor-cover-heading"><h2 id="editor-cover-title">文章封面</h2><small>用于文章页顶部和文章列表</small></div>
+          <div class="editor-cover-body">
+            <div class="editor-cover-preview"><img data-cover-preview alt="文章封面预览，可拖动调整位置" draggable="false" style="object-position:{{ post|cover_position }}" {% if post and post|post_cover %}src="{{ post|post_cover }}"{% else %}hidden{% endif %}><span data-cover-empty>选择一张图片作为文章封面</span></div>
+            <div class="editor-cover-actions">
+              <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-cover-file hidden aria-label="选择文章封面图片">
+              <button type="button" class="secondary-button" data-cover-choose>上传封面图</button>
+              <div><button type="button" class="secondary-button" data-cover-auto>使用正文首图</button><button type="button" class="secondary-button" data-cover-remove>移除封面</button></div>
+              <small>支持 PNG、JPG、GIF、WebP，小于 8 MB</small>
+              <p data-cover-status role="status" aria-live="polite"></p>
+            </div>
+          </div>
+          <fieldset class="editor-cover-position" data-cover-position hidden>
+            <legend>调整显示位置</legend>
+            <p class="editor-cover-position-hint">拖动上方封面或移动滑块，选择要保留的画面。保存文章后生效。</p>
+            <div class="editor-cover-sliders">
+              <label>水平位置 <output data-cover-x-value>50%</output><input type="range" min="0" max="100" step="1" value="50" data-cover-x aria-label="封面水平位置"><small>左侧 ← → 右侧</small></label>
+              <label>垂直位置 <output data-cover-y-value>50%</output><input type="range" min="0" max="100" step="1" value="50" data-cover-y aria-label="封面垂直位置"><small>顶部 ← → 底部</small></label>
+            </div>
+            <button type="button" class="secondary-button" data-cover-center>恢复居中</button>
+            <p class="editor-cover-position-hint">宽幅列表预览 · 页面宽度变化时裁切范围会随之变化</p>
+            <div class="editor-cover-list-preview"><img data-cover-list-preview alt="宽幅列表封面预览" draggable="false"></div>
+          </fieldset>
+        </section>
         <p data-format-hint hidden>正文包含 LaTeX 章节或文档命令。<button type="button" class="secondary-button" data-switch-latex>切换为 LaTeX 文章</button></p>
         <div class="editor-format-tools" data-latex-tools hidden><button type="button" class="secondary-button" data-latex-insert="section">插入章节</button><button type="button" class="secondary-button" data-latex-insert="math">插入公式</button><button type="button" class="secondary-button" data-latex-insert="list">插入列表</button><button type="button" class="secondary-button" data-latex-example>插入示例</button><button type="button" class="secondary-button" data-latex-download>下载 .tex</button><p>支持常用 LaTeX 章节、列表、公式和图片，转换为网页发布；特殊宏包与纸张版式可能不适用。</p></div>
+        <div class="editor-code-tools"><button type="button" class="secondary-button" data-insert-code>插入 C++ 代码块</button><small>选中已有代码后点击，可保留代码格式</small></div>
         <label>正文 <small data-content-help>支持 Markdown、表格、代码块；可直接 Ctrl+V 粘贴截图，自动上传并插入图片链接</small><textarea class="content-editor" name="content" required placeholder="从这里开始写作……" data-content>&#10;{{ post.content if post else '' }}</textarea></label>
         <div class="editor-help"><span>字数 <b data-word-count>0</b></span><span>预计阅读 <b data-read-time>1</b> 分钟</span><span>快捷保存 Ctrl / ⌘ + S</span></div>
       </div>
@@ -27,3 +54,4 @@
   </form>
 </main>
 {% endblock %}
+{% block scripts %}<script defer src="/static/article-editor.js?v=20261117-cover-position-v1"></script>{% endblock %}

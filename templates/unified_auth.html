@@ -1,0 +1,34 @@
+{% extends "redefine_base.html" %}
+{% block title %}OrangeLab 统一账号{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="/static/unified-auth.css?v=20261028-inline-code-v1">
+<div class="main-content reader-auth-wrap"><section class="reader-auth-card unified-card unified-phone-card">
+<h1>{{ {'register':'创建统一账号','upgrade':'账号安全升级','recover':'账号恢复','phone':'手机安全与换绑'}[mode] }}</h1>
+{% if mock %}<p class="unified-note">本地测试 · 模拟短信，不发送真实短信</p>{% endif %}
+{% if mode == 'upgrade' %}<p>{{ message }}</p><p>当前用户名：<strong>{{ user.nickname or '待补全' }}</strong></p>{% endif %}
+{% if mode == 'register' %}<p>一个账号，记录手记，也漫游延大。</p>{% endif %}
+{% if mode == 'recover' %}<p>验证已绑定的手机号后重置密码。未绑定手机且无法登录的历史账号，请联系管理员核实归属；手机号冲突不会覆盖或合并账号。</p>{% endif %}
+{% if error %}<p class="reader-error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="{{ url_for({'register':'reader.register','upgrade':'unified_upgrade','recover':'unified_recover','phone':'unified_phone'}[mode]) }}" class="reader-auth-form" data-unified-form data-purpose="{{ 'bind' if mode == 'upgrade' else 'change' if mode == 'phone' else mode }}">
+<input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="next" value="{{ next_url }}">
+<input type="hidden" name="challenge_id" value="{{ request.form.get('challenge_id','') }}"><input type="hidden" name="old_challenge_id" value="{{ request.form.get('old_challenge_id','') }}">
+{% if mode == 'register' or (mode == 'upgrade' and (not user.nickname or not user.nickname_key)) %}<label>用户名<input name="nickname" value="{{ request.form.get('nickname','') }}" required maxlength="24" autocomplete="username" placeholder="汉字、字母、数字、_ 或 -"></label>{% endif %}
+{% if mode == 'phone' %}
+<p>原手机号：{{ user.phone[:3] }}****{{ user.phone[-4:] }}</p>
+<button type="button" class="reader-primary" data-send-old>验证原手机号</button>
+<label>原手机验证码<input name="old_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
+{% endif %}
+<div class="unified-phone-field">
+<label for="unified-phone">{{ '新手机号' if mode == 'phone' else '中国大陆手机号' }}</label>
+<div class="unified-phone-row"><input id="unified-phone" name="phone" type="tel" value="{{ request.form.get('phone','') }}" inputmode="numeric" pattern="1[3-9][0-9]{9}" maxlength="11" autocomplete="tel-national" required placeholder="11位手机号"><button type="button" class="reader-primary unified-send-code" data-send-code>获取验证码</button></div>
+</div>
+<label>短信验证码<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+{% if mode in ('register','recover') or (mode == 'upgrade' and not user.password_hash) %}<label>{{ '设置新密码' if mode == 'recover' else '密码' }}<input name="password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required placeholder="10–128位，字母/数字/符号至少两类"></label>{% endif %}
+<p class="unified-status" role="status" aria-live="polite"></p>
+<button type="submit" class="reader-primary">{{ {'register':'注册并登录','upgrade':'验证并继续','recover':'验证并重置密码','phone':'确认换绑'}[mode] }}</button>
+</form>
+<div class="unified-links"><a href="/auth/login" data-no-pjax>返回登录</a></div>
+{% if user %}<form method="post" action="/auth/logout"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button type="submit">退出登录</button></form>{% endif %}
+</section></div>
+{% endblock %}
+{% block scripts %}<script defer src="/static/unified-auth.js"></script>{% endblock %}

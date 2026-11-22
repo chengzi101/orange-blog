@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 
 from flask import Blueprint, g, request, session, render_template, redirect, url_for, flash
 from moderation import init_moderation, install_moderation, reserve_submission, classify, client_ip, fingerprint, comment_pending
-from werkzeug.security import generate_password_hash, check_password_hash
+from unified_passwords import check_password_hash, generate_password_hash
 from security_helpers import constant_time_text_equal
 from auth_security import LoginLimited
 from public_limits import reserve_public, check_public
@@ -104,6 +104,8 @@ def restore_post_community(db, post_id, payload):
 
 def safe_return(value):
     value = value or '/'
+    if value == '/auth/continue':
+        return value
     if not value.startswith('/') or value.startswith('//') or '\\' in value:
         return '/'
     if any(ord(char) < 32 for char in value):

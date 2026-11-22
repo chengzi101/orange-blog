@@ -42,7 +42,16 @@
     }
     return found;
   };
-  const resize = node => { node.style.height = 'auto'; node.style.height = Math.max(64, node.scrollHeight) + 'px'; };
+  const resize = node => {
+    // Measuring a long textarea at its natural height can temporarily shorten the
+    // document and clamp the viewport. Keep the reading position through reflow.
+    const left = window.scrollX, top = window.scrollY;
+    node.style.height = 'auto';
+    node.style.height = Math.max(64, node.scrollHeight) + 'px';
+    if (window.scrollX !== left || window.scrollY !== top) {
+      window.scrollTo({left, top, behavior: 'instant'});
+    }
+  };
   const notify = () => source.dispatchEvent(new Event('input', {bubbles: true}));
   const imageUndo = [], imageRedo = [];
   const deleteImage = index => {

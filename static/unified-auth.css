@@ -1,0 +1,8 @@
+.unified-card{max-width:480px!important;border-top:5px solid #eb8d45;border-radius:8px!important}.unified-card h1{font-size:28px}.unified-card p{line-height:1.8}.unified-note{color:#b76725}.unified-card input{box-sizing:border-box;width:100%;min-height:46px}.unified-status{min-height:1.8em;color:#b76725}.unified-links{display:flex;gap:20px;flex-wrap:wrap;margin:24px 0}.unified-card .reader-eyebrow{font-family:monospace;letter-spacing:1px}.unified-card button{min-height:44px;cursor:pointer}.unified-card button:disabled{opacity:.6;cursor:wait}@media(max-width:600px){.unified-card{margin:12px;padding:22px!important}}
+
+.unified-phone-row{display:flex;align-items:center;margin-top:8px;border:1px solid var(--border-color,#cbd7e0);border-radius:12px;background:var(--background-color,#fff)}
+.unified-phone-row:focus-within{border-color:#75a9c9;box-shadow:0 0 0 3px #75a9c925}
+.reader-auth-form .unified-phone-row input{flex:1;width:0;min-width:0;margin:0;border:0;background:transparent;padding:13px 12px;box-shadow:none}
+.reader-auth-form .unified-phone-row .unified-send-code{flex:0 0 116px;width:116px;margin:0 5px 0 0;padding:8px 5px;border-radius:8px;font-size:13px;white-space:nowrap}
+.unified-phone-row .unified-send-code:focus-visible{outline:2px solid #75a9c9;outline-offset:2px}
+@media(max-width:400px){.unified-phone-card{margin:12px 0;padding:22px 16px!important}}

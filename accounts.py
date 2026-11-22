@@ -5,7 +5,7 @@ import sqlite3
 import unicodedata
 from functools import wraps
 from flask import abort, flash, redirect, render_template, request, session, url_for
-from werkzeug.security import generate_password_hash
+from unified_passwords import generate_password_hash, validate_password
 from owner import owner_id
 from security_helpers import constant_time_text_equal
 from auth_security import revoke_reader_sessions
@@ -72,6 +72,11 @@ def install_accounts(app, get_db, now_iso):
                 abort(400)
             nickname = unicodedata.normalize('NFKC', request.form.get('nickname', '')).strip()
             password = request.form.get('password', '')
+            if action == 'password':
+                try:
+                    validate_password(password)
+                except ValueError as exc:
+                    error = str(exc)
             title = unicodedata.normalize('NFKC', request.form.get('custom_title', '')).strip()
             if action == 'title' and (len(title) > 12 or any(unicodedata.category(c).startswith('C') for c in title)):
                 error = '头衔最多 12 个字符，不能包含控制字符；留空可清除。'
@@ -79,8 +84,8 @@ def install_accounts(app, get_db, now_iso):
                 error = '“博主”为系统头衔，请填写其他头衔。'
             if action == 'rename' and (not 1 <= len(nickname) <= 24 or any(unicodedata.category(c).startswith('C') for c in nickname)):
                 error = '昵称需为 1–24 个字符，不能包含控制字符。'
-            if action == 'password' and (not 8 <= len(password) <= 24 or password != request.form.get('confirm_password', '')):
-                error = '密码需为 8–24 个字符，且两次输入一致。'
+            if action == 'password' and (not 10 <= len(password) <= 128 or password != request.form.get('confirm_password', '')):
+                error = '密码需为 10–128 个字符，且两次输入一致。'
             if not error:
                 try:
                     with db:
