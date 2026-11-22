@@ -1,0 +1,29 @@
+{% extends "admin_base.html" %}
+{% block title %}笔记｜Orange手记后台{% endblock %}
+{% block body %}
+<main class="admin-main" id="admin-content">
+  <div class="dashboard-title"><h1>笔记</h1><a href="{{ url_for('study_notes') }}" target="_blank" rel="noopener">查看前台笔记 ↗</a></div>
+  <form class="settings-form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <section>
+      <h2>上传 PDF</h2>
+      <p id="study-note-upload-help">单份最多 {{ max_mb }} MB、{{ max_pages }} 页。上传后自动生成预览并公开发布。</p>
+      <label>PDF 文件<input name="pdf" type="file" accept="application/pdf,.pdf" aria-describedby="study-note-upload-help" required></label>
+      <label>标题 <input name="title" maxlength="120" placeholder="留空使用文件名"></label>
+      <label>主题 <input name="topic" maxlength="40" placeholder="选填，例如人工智能"></label>
+      <label>简介 <textarea name="summary" maxlength="500" rows="3" placeholder="选填"></textarea></label>
+      <button class="primary-button" type="submit">上传并发布</button>
+    </section>
+  </form>
+  <section class="module-panel">
+    <h2>已发布笔记</h2>
+    {% if notes %}
+    <ul class="popular-list">
+      {% for note in notes %}
+      <li id="{{ note.slug }}"><a href="{{ url_for('study_note', slug=note.slug) }}" target="_blank" rel="noopener">{{ note.title }}</a><span>{{ note.topic }} · {{ note.page_count }} 页</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p>暂无笔记。</p>{% endif %}
+  </section>
+</main>
+{% endblock %}

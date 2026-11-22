@@ -1,0 +1,44 @@
+{% extends "redefine_base.html" %}
+{% block title %}{{ note.title }}｜笔记｜Orange手记{% endblock %}
+{% block description %}{{ note.summary }}{% endblock %}
+{% block content %}
+{% set pdf_url = url_for('study_note_asset', slug=note.slug, filename='original.pdf') %}
+<article class="main-content study-note-reader">
+  <header class="page-template-container">
+    <a class="study-note-back" href="{{ url_for('study_notes') }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> 返回笔记</a>
+    <h1 class="page-title-header">{{ note.title }}</h1>
+    <p class="study-note-meta">{{ note.topic }} · {{ note.page_count }} 页</p>
+    {% if note.summary %}<div class="page-template-content markdown-body"><p>{{ note.summary }}</p></div>{% endif %}
+    <div class="study-note-actions">
+      <a class="toolbox-download" href="{{ pdf_url }}" target="_blank" rel="noopener"><i class="fa-regular fa-file-pdf" aria-hidden="true"></i> 打开 PDF</a>
+      <a class="toolbox-download" href="{{ pdf_url }}" download="{{ note.pdf_filename }}"><i class="fa-solid fa-download" aria-hidden="true"></i> 下载 PDF</a>
+    </div>
+  </header>
+  <ol class="study-note-pages" aria-label="扫描页">
+    {% for width, height in pages %}
+    {% set page = loop.index %}
+    {% set page_url = url_for('study_note_asset', slug=note.slug, filename='page-' ~ page ~ '.webp') %}
+    <li id="page-{{ page }}">
+      <a class="study-note-scan" href="{{ page_url }}" data-study-note-page="{{ page }}"
+         aria-haspopup="dialog" aria-controls="study-note-preview" aria-label="查看第 {{ page }} 页大图">
+        <figure class="orange-project-card study-note-page">
+          <figcaption><span>第 {{ page }} 页 / {{ note.page_count }}</span><span class="study-note-zoom">查看大图 <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></span></figcaption>
+          <img src="{{ page_url }}" width="{{ width }}" height="{{ height }}"
+               {% if page > 2 %}loading="lazy"{% endif %} decoding="async" alt="{{ note.title }}手写笔记第 {{ page }} 页">
+        </figure>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+  <dialog id="study-note-preview" class="study-note-preview" aria-labelledby="study-note-preview-title">
+    <header class="study-note-preview-header">
+      <h2 id="study-note-preview-title">{{ note.title }}</h2>
+      <form method="dialog">
+        <button type="button" class="study-note-preview-zoom" aria-pressed="false">放大</button>
+        <button type="submit" autofocus>关闭</button>
+      </form>
+    </header>
+    <div class="study-note-preview-scroll" role="region" aria-label="扫描页图像" tabindex="0"></div>
+  </dialog>
+</article>
+{% endblock %}

@@ -1,0 +1,11 @@
+<section class="orange-project-card latest-study-note" aria-labelledby="latest-study-note-title">
+  <a class="latest-study-note-entry" href="{{ url_for('study_note', slug=latest_study_note.slug) }}">
+    <img class="study-note-cover" src="{{ url_for('study_note_asset', slug=latest_study_note.slug, filename='cover.webp') }}"
+         width="360" height="509" loading="lazy" decoding="async" alt="">
+    <div>
+      <p class="study-note-meta">最新笔记 · {{ latest_study_note.topic }}</p>
+      <h2 id="latest-study-note-title">{{ latest_study_note.title }}</h2>
+    </div>
+  </a>
+  <a class="latest-study-note-all" href="{{ url_for('study_notes') }}">查看全部笔记 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+</section>

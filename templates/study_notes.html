@@ -1,0 +1,43 @@
+{% extends "redefine_base.html" %}
+{% block title %}笔记｜Orange手记{% endblock %}
+{% block description %}按主题浏览 Orange手记的手写扫描笔记。{% endblock %}
+{% block content %}
+<div class="main-content study-notes-index">
+  <div class="page-template-container">
+    <h1 class="page-title-header">笔记</h1>
+    <div class="page-template-content markdown-body">
+      <p>手写笔记，按主题浏览。</p>
+    </div>
+    {% if topics %}
+    <nav class="study-note-filters" aria-label="笔记主题">
+      <a href="{{ url_for('study_notes') }}"{% if not active_topic %} aria-current="page"{% endif %}>全部</a>
+      {% for topic in topics %}
+      <a href="{{ url_for('study_notes', topic=topic) }}"{% if topic == active_topic %} aria-current="page"{% endif %}>{{ topic }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+  {% if notes %}
+  <ul class="orange-project-list toolbox-grid" aria-label="笔记列表">
+    {% for note in notes %}
+    <li class="orange-project-card study-note-card">
+      <a class="toolbox-card study-note-card-link" href="{{ url_for('study_note', slug=note.slug) }}">
+        <div class="toolbox-card-heading">
+          <img class="study-note-cover" src="{{ url_for('study_note_asset', slug=note.slug, filename='cover.webp') }}"
+               width="360" height="509" loading="lazy" decoding="async" alt="">
+          <div>
+            <h2>{{ note.title }}</h2>
+            <p class="toolbox-meta">{{ note.topic }} · {{ note.page_count }} 页</p>
+          </div>
+        </div>
+        {% if note.summary %}<p class="toolbox-filename">{{ note.summary }}</p>{% endif %}
+        <span class="toolbox-download"><i class="fa-regular fa-book-open" aria-hidden="true"></i> 阅读笔记</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="page-template-container study-notes-empty">{{ '该主题暂无笔记。' if active_topic else '暂无笔记。' }}</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -115,8 +115,41 @@
   }
   window.addEventListener('hashchange',revealTocHash);
 
+  function initStudyNotePreview() {
+    const dialog = $('#study-note-preview');
+    if (!dialog || typeof dialog.showModal !== 'function') return;
+
+    const title = $('#study-note-preview-title');
+    const scrollArea = dialog.querySelector('.study-note-preview-scroll');
+    const zoom = dialog.querySelector('.study-note-preview-zoom');
+
+    dialog.closest('.study-note-reader').addEventListener('click', event => {
+      const link = event.target.closest('.study-note-scan');
+      if (!link || event.defaultPrevented || event.button !== 0 ||
+          event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      const image = link.querySelector('img').cloneNode();
+      image.removeAttribute('loading');
+      title.textContent = `第 ${link.dataset.studyNotePage} 页`;
+      scrollArea.classList.remove('is-zoomed');
+      scrollArea.style.setProperty('--scan-width', `${image.getAttribute('width')}px`);
+      zoom.setAttribute('aria-pressed', 'false');
+      scrollArea.replaceChildren(image);
+      dialog.showModal();
+      scrollArea.scrollTo(0, 0);
+    });
+
+    zoom.addEventListener('click', () => {
+      zoom.setAttribute('aria-pressed', String(scrollArea.classList.toggle('is-zoomed')));
+    });
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+
   let subtitleTimer,pageObserver;
-  function initPage(){clearInterval(subtitleTimer);pageObserver?.disconnect();initToc();
+  function initPage(){clearInterval(subtitleTimer);pageObserver?.disconnect();initToc();initStudyNotePreview();
   const subtitle=$('#subtitle');if(subtitle){const text=subtitle.dataset.text||'';const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduced)subtitle.textContent=text;else{let i=0;const cursor=document.createElement('span');cursor.className='typing-cursor';cursor.textContent='|';subtitle.after(cursor);subtitleTimer=setInterval(()=>{subtitle.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(subtitleTimer)},90)}}
   const headings=$$('.article-content :is(h1,h2,h3,h4,h5,h6)[id]');if(headings.length){pageObserver=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){$$('.post-toc a').forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id))}},{rootMargin:'-10% 0px -70% 0px'});headings.forEach(h=>pageObserver.observe(h))}
   }

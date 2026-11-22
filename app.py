@@ -4,10 +4,12 @@ import hmac
 import hashlib
 import ipaddress
 import json
+import mimetypes
 import os
 import re
 import secrets
 import sqlite3
+import subprocess
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -20,6 +22,7 @@ from auth_security import (SQLiteSessionInterface, init_auth_schema, LoginLimite
                            reserve_admin_login, consume_admin_ticket)
 from public_limits import reserve_public
 from runtime_security import runtime_security_config, TrustedHostMiddleware
+from study_notes import MAX_NOTE_MB, MAX_NOTE_PAGES, StudyNoteError, init_study_notes, publish_study_note
 
 import bleach
 import markdown
@@ -42,6 +45,7 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -49,10 +53,14 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("ORANGE_DB", BASE_DIR / "data" / "blog.db"))
 UPLOAD_DIR = Path(os.environ.get("ORANGE_UPLOADS", DB_PATH.parent / "uploads"))
+STUDY_NOTE_DIR = DB_PATH.parent / "study-notes"
 ADMIN_USER = os.environ.get("ORANGE_ADMIN_USER", "orange")
 ADMIN_PASSWORD_HASH = os.environ.get("ORANGE_ADMIN_PASSWORD_HASH", "")
 ADMIN_AUTO_TOKEN = os.environ.get("ORANGE_ADMIN_AUTO_TOKEN", "")
 SHANGHAI = timezone(timedelta(hours=8), name="Asia/Shanghai")
+
+# Some Windows MIME registries associate .webp with an empty content type.
+mimetypes.add_type("image/webp", ".webp")
 
 app = Flask(__name__)
 app.config.update(
@@ -137,6 +145,7 @@ def close_db(_: BaseException | None) -> None:
 
 def init_db() -> None:
     db = get_db()
+    init_study_notes(db)
     db.execute(
         """
         CREATE TABLE IF NOT EXISTS posts (
@@ -891,7 +900,7 @@ def ensure_schema() -> None:
 def public_read_budget():
     endpoints={'home','articles','post_detail','archive','projects','project_detail','garden',
                'uses','colophon','about','toolbox','toolbox_download','theme_taxonomy','theme_tag','theme_category',
-               'theme_archives','theme_search_index','feed','sitemap','reader.comments','reader.comment_replies',
+               'theme_archives','theme_search_index','study_notes','study_note','feed','sitemap','reader.comments','reader.comment_replies',
                'reader.project_comments','reader.project_comment_replies','reader.reader_session','reader.login','reader.register','profile.account','profile.avatar'}
     if request.method not in {'GET','HEAD'} or request.endpoint not in endpoints:
         return
@@ -1473,6 +1482,7 @@ def analytics_path_label(path: str, db: sqlite3.Connection) -> str:
         "/articles": "文章列表",
         "/projects": "项目",
         "/toolbox": "工具箱",
+        "/study-notes": "笔记",
         "/notes": "片段",
         "/about": "关于",
         "/archive": "全部记录",
@@ -1482,6 +1492,11 @@ def analytics_path_label(path: str, db: sqlite3.Connection) -> str:
     }
     if path in labels:
         return labels[path]
+    if path.startswith("/study-notes/"):
+        slug = path.removeprefix("/study-notes/")
+        note = db.execute("SELECT title FROM study_notes WHERE slug = ?", (slug,)).fetchone()
+        if note:
+            return f"笔记 · {note['title']}"
     if path.startswith("/posts/"):
         slug = path.removeprefix("/posts/")
         item = db.execute(
@@ -1619,9 +1634,15 @@ def home():
                 "latest": latest["title"] if latest else "",
             }
         )
+    latest_study_note = None
+    if page == 1 and not (query or active_tag or active_category):
+        latest_study_note = get_db().execute(
+            "SELECT slug, title, topic FROM study_notes ORDER BY created_at DESC, slug DESC LIMIT 1"
+        ).fetchone()
     return render_template(
         "home.html",
         posts=posts,
+        latest_study_note=latest_study_note,
         listing_page=page,listing_pages=pages,
         featured=featured if not (query or active_tag or active_category) else None,
         total_posts=len(all_posts),
@@ -1945,6 +1966,53 @@ def toolbox_download(slug: str):
     )
 
 
+@app.get("/study-notes")
+def study_notes():
+    track_pageview("/study-notes")
+    topic = request.args.get("topic", "").strip()
+    db = get_db()
+    topics = [row["topic"] for row in db.execute("SELECT DISTINCT topic FROM study_notes ORDER BY topic")]
+    query = "SELECT slug, title, topic, summary, page_count FROM study_notes"
+    if topic:
+        query += " WHERE topic = ?"
+    visible_notes = db.execute(
+        query + " ORDER BY created_at DESC, slug DESC", (topic,) if topic else (),
+    ).fetchall()
+    return render_template(
+        "study_notes.html", notes=visible_notes, topics=topics, active_topic=topic,
+    )
+
+
+@app.get("/study-notes/<slug>")
+def study_note(slug: str):
+    note = get_db().execute("SELECT * FROM study_notes WHERE slug = ?", (slug,)).fetchone()
+    if note is None:
+        abort(404)
+    track_pageview(url_for("study_note", slug=note["slug"]))
+    return render_template("study_note.html", note=note, pages=json.loads(note["page_sizes"]))
+
+
+@app.get("/study-notes/<slug>/files/<filename>")
+def study_note_asset(slug: str, filename: str):
+    note = get_db().execute(
+        "SELECT page_count, pdf_filename FROM study_notes WHERE slug = ?", (slug,),
+    ).fetchone()
+    if note is None:
+        abort(404)
+    if filename == "original.pdf":
+        return send_from_directory(
+            STUDY_NOTE_DIR / slug, filename, mimetype="application/pdf",
+            download_name=note["pdf_filename"], conditional=True, max_age=86400,
+        )
+    if filename != "cover.webp":
+        page = re.fullmatch(r"page-([1-9][0-9]{0,2})\.webp", filename)
+        if page is None or int(page[1]) > note["page_count"]:
+            abort(404)
+    return send_from_directory(
+        STUDY_NOTE_DIR / slug, filename, mimetype="image/webp", conditional=True, max_age=86400,
+    )
+
+
 @app.get("/about")
 def about():
     track_pageview("/about")
@@ -1997,9 +2065,12 @@ def sitemap():
     projects = get_db().execute(
         "SELECT slug, updated_at FROM projects WHERE is_visible = 1 ORDER BY updated_at DESC"
     ).fetchall()
+    study_note_links = get_db().execute(
+        "SELECT slug, created_at FROM study_notes ORDER BY created_at DESC"
+    ).fetchall()
     urls = [
         f"<url><loc>{xml_escape(root + path)}</loc></url>"
-        for path in ["/", url_for("articles"), url_for("garden"), url_for("uses"), url_for("colophon"), url_for("archive"), url_for("projects"), url_for("toolbox"), url_for("about")]
+        for path in ["/", url_for("articles"), url_for("garden"), url_for("uses"), url_for("colophon"), url_for("archive"), url_for("projects"), url_for("toolbox"), url_for("study_notes"), url_for("about")]
     ]
     urls.extend(
         f"<url><loc>{xml_escape(root + url_for('post_detail', slug=post['slug']))}</loc><lastmod>{xml_escape(post['updated_at'][:10])}</lastmod></url>"
@@ -2008,6 +2079,10 @@ def sitemap():
     urls.extend(
         f"<url><loc>{xml_escape(root + url_for('project_detail', slug=project['slug']))}</loc><lastmod>{xml_escape(project['updated_at'][:10])}</lastmod></url>"
         for project in projects
+    )
+    urls.extend(
+        f"<url><loc>{xml_escape(root + url_for('study_note', slug=note['slug']))}</loc><lastmod>{note['created_at'][:10]}</lastmod></url>"
+        for note in study_note_links
     )
     return Response(
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -2787,6 +2862,47 @@ def admin_notes_bulk_delete():
     deleted = move_content_to_trash("note", selected)
     flash(f"已将 {deleted} 条片段移入回收站。", "success")
     return redirect(url_for("admin_notes"))
+
+
+@app.route("/admin/study-notes", methods=["GET", "POST"])
+@admin_required
+def admin_study_notes():
+    if request.method == "POST":
+        request.max_content_length = (MAX_NOTE_MB + 1) * 1024 * 1024
+        try:
+            validate_csrf()
+            upload = request.files.get("pdf")
+            if not upload:
+                raise StudyNoteError("请选择要发布的 PDF。")
+            slug, created = publish_study_note(
+                get_db(), STUDY_NOTE_DIR, upload.stream, upload.filename, now_iso(),
+                title=request.form.get("title", ""),
+                topic=request.form.get("topic", ""),
+                summary=request.form.get("summary", ""),
+            )
+        except RequestEntityTooLarge:
+            flash(f"PDF 大小超过 {MAX_NOTE_MB} MB。", "error")
+        except StudyNoteError as error:
+            flash(str(error), "error")
+        except (OSError, subprocess.SubprocessError):
+            app.logger.exception("Could not generate study note previews")
+            flash("暂时无法发布笔记，请稍后重试。", "error")
+        else:
+            if created:
+                log_admin_action("发布笔记", "study_note", slug)
+                get_db().commit()
+                flash("笔记已发布。", "success")
+            else:
+                flash("这份 PDF 已发布，已定位到现有笔记。", "success")
+            return redirect(url_for("admin_study_notes", _anchor=slug), code=303)
+        return redirect(url_for("admin_study_notes"), code=303)
+
+    notes = get_db().execute(
+        "SELECT slug, title, topic, page_count FROM study_notes ORDER BY created_at DESC, slug DESC"
+    ).fetchall()
+    return render_template(
+        "admin_study_notes.html", notes=notes, max_mb=MAX_NOTE_MB, max_pages=MAX_NOTE_PAGES,
+    )
 
 
 @app.route("/admin/media", methods=["GET", "POST"])
