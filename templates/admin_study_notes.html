@@ -1,5 +1,6 @@
 {% extends "admin_base.html" %}
 {% block title %}笔记｜Orange手记后台{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='admin-study-notes.css', v=1) }}">{% endblock %}
 {% block body %}
 <main class="admin-main" id="admin-content">
   <div class="dashboard-title"><h1>笔记</h1><a href="{{ url_for('study_notes') }}" target="_blank" rel="noopener">查看前台笔记 ↗</a></div>
@@ -15,12 +16,17 @@
       <button class="primary-button" type="submit">上传并发布</button>
     </section>
   </form>
-  <section class="module-panel">
-    <h2>已发布笔记</h2>
+  <section class="module-panel published-study-notes" aria-labelledby="published-study-notes-title">
+    <h2 id="published-study-notes-title">已发布笔记</h2>
     {% if notes %}
-    <ul class="popular-list">
+    <ul class="published-study-notes-list" role="list">
       {% for note in notes %}
-      <li id="{{ note.slug }}"><a href="{{ url_for('study_note', slug=note.slug) }}" target="_blank" rel="noopener">{{ note.title }}</a><span>{{ note.topic }} · {{ note.page_count }} 页</span></li>
+      <li id="{{ note.slug }}">
+        <a class="published-study-note" href="{{ url_for('study_note', slug=note.slug) }}" target="_blank" rel="noopener">
+          <span class="published-study-note-title">{{ note.title }}</span>
+          <span class="published-study-note-meta">{{ note.topic }} · {{ note.page_count }} 页</span>
+        </a>
+      </li>
       {% endfor %}
     </ul>
     {% else %}<p>暂无笔记。</p>{% endif %}
