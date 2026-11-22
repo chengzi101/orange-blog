@@ -1,20 +1,23 @@
 {% extends "redefine_base.html" %}
-{% block title %}笔记｜Orange手记{% endblock %}
+{% block title %}{{ collection_title or "笔记" }}｜Orange手记{% endblock %}
 {% block description %}按主题浏览 Orange手记的手写扫描笔记。{% endblock %}
 {% block content %}
 <div class="main-content study-notes-index">
   <div class="page-template-container">
-    <h1 class="page-title-header">笔记</h1>
+    <h1 class="page-title-header">{{ collection_title or "笔记" }}</h1>
     <div class="page-template-content markdown-body">
       <p>手写笔记，按主题浏览。</p>
     </div>
     {% if topics %}
     <nav class="study-note-filters" aria-label="笔记主题">
-      <a href="{{ url_for('study_notes') }}"{% if not active_topic %} aria-current="page"{% endif %}>全部</a>
+      <a href="{{ url_for('study_notes', collection=collection) }}"{% if not active_topic %} aria-current="page"{% endif %}>全部</a>
       {% for topic in topics %}
-      <a href="{{ url_for('study_notes', topic=topic) }}"{% if topic == active_topic %} aria-current="page"{% endif %}>{{ topic }}</a>
+      <a href="{{ url_for('study_notes', collection=collection, topic=topic) }}"{% if topic == active_topic %} aria-current="page"{% endif %}>{{ topic }}</a>
       {% endfor %}
     </nav>
+    {% endif %}
+    {% if collection %}
+    <p><a class="study-note-back" href="{{ url_for('study_notes') }}">查看所有笔记 <i class="fa-solid fa-angle-right" aria-hidden="true"></i></a></p>
     {% endif %}
   </div>
   {% if notes %}

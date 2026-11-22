@@ -114,6 +114,24 @@ SETTING_DEFAULTS = {
     "github_url": "",
 }
 
+STUDY_NOTE_COLLECTION = "2026-11-22"
+STUDY_NOTE_COLLECTION_TITLE = "2026.11.22 笔记合集"
+# The first collection keeps its display order and membership as new notes are published.
+STUDY_NOTE_COLLECTION_SLUGS = (
+    "note-26d694da04f7f4f2",  # 机器学习
+    "note-b7a9670ff0f438f4",  # 机器学习期末复习
+    "note-1064e688c8392d02",  # 计算机组成原理
+    "note-6894722989c587a8",  # 操作系统
+    "note-5536ed68d3bb2c53",  # 高等数学（张宇）
+    "note-f8befc05fd08dbef",  # 高数题型
+    "note-26a993939d0004e5",  # 线性代数（张宇）
+    "note-73f48356ecc34046",  # 概率论（张宇）
+    "note-4735e808ecf0e9aa",  # 信息论
+    "note-e60f84b67d999e51",  # 高中数学
+)
+STUDY_NOTE_COLLECTION_ORDER = {slug: index for index, slug in enumerate(STUDY_NOTE_COLLECTION_SLUGS)}
+STUDY_NOTE_COLLECTION_MEMBERS = "slug IN (" + ", ".join("?" for _ in STUDY_NOTE_COLLECTION_SLUGS) + ")"
+
 ALLOWED_UPLOADS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 _schema_ready = False
@@ -143,6 +161,25 @@ def close_db(_: BaseException | None) -> None:
         db.close()
 
 
+def clear_legacy_post_tags(db: sqlite3.Connection, post_columns: set[str]) -> None:
+    # Older SQLite releases cannot drop columns. New databases omit this field.
+    if "tags" in post_columns:
+        db.execute("UPDATE posts SET tags = '' WHERE tags <> ''")
+
+    rows = db.execute("SELECT id, payload FROM trash_items WHERE item_type = 'post'").fetchall()
+    for row in rows:
+        try:
+            payload = json.loads(row["payload"])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and "tags" in payload:
+            del payload["tags"]
+            db.execute(
+                "UPDATE trash_items SET payload = ? WHERE id = ?",
+                (json.dumps(payload, ensure_ascii=False), row["id"]),
+            )
+
+
 def init_db() -> None:
     db = get_db()
     init_study_notes(db)
@@ -154,7 +191,6 @@ def init_db() -> None:
             slug TEXT NOT NULL UNIQUE,
             excerpt TEXT NOT NULL DEFAULT '',
             content TEXT NOT NULL DEFAULT '',
-            tags TEXT NOT NULL DEFAULT '',
             category TEXT NOT NULL DEFAULT '随笔',
             is_featured INTEGER NOT NULL DEFAULT 0,
             views INTEGER NOT NULL DEFAULT 0,
@@ -341,6 +377,7 @@ def init_db() -> None:
         )
         """
     )
+    clear_legacy_post_tags(db, existing_columns)
     db.execute("CREATE INDEX IF NOT EXISTS posts_status_date_idx ON posts(status, published_at DESC)")
     db.execute("CREATE INDEX IF NOT EXISTS posts_category_idx ON posts(category)")
     db.execute("CREATE INDEX IF NOT EXISTS visitor_daily_seen_idx ON visitor_daily(last_seen DESC)")
@@ -367,28 +404,28 @@ def init_db() -> None:
                 "为什么我开始写这个博客", "why-i-started",
                 "把零散的思考整理成可以再次抵达的地方，也记录那些真正解决了问题的方法。",
                 """## 从这里开始\n\n写作不是为了制造更多信息，而是为了把真正有用的经验保存下来。\n\n这个网站会记录代码、模型与生活现场，也保留那些仍在追问的问题。""",
-                "随笔,开始", "随笔", 1,
+                "随笔", 1,
             ),
             (
                 "从数据到决策：一次建模工作的完整路径", "data-to-decision",
                 "比答案更重要的是证据链：怎样检查数据、选择路线，并让每一步都能够复现。",
                 """## 先建立证据链\n\n一项可靠的建模工作通常从数据审计开始，而不是从复杂算法开始。\n\n1. 检查数据来源和口径\n2. 建立可复现的基线\n3. 再逐步增加模型复杂度\n4. 用结果验证每个假设""",
-                "数学建模,方法", "研究", 0,
+                "研究", 0,
             ),
             (
                 "并发系统里，那些不能靠运气的细节", "concurrency-details",
                 "从事务、锁到压力测试，聊聊一个可靠系统如何应对同一时刻发生的事情。",
                 """## 可靠性不是偶然\n\n并发系统需要明确事务边界、锁的粒度和失败后的恢复路径。只有经过压力测试，设计中的假设才会真正暴露出来。""",
-                "数据库,工程", "技术", 0,
+                "技术", 0,
             ),
         ]
         created = now_iso()
         db.executemany(
             """
             INSERT INTO posts
-            (title, slug, excerpt, content, tags, category, is_featured, views,
+            (title, slug, excerpt, content, category, is_featured, views,
              status, published_at, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'published', ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, 0, 'published', ?, ?, ?)
             """,
             [(*seed, created, created, created) for seed in seeds],
         )
@@ -500,7 +537,6 @@ def init_db() -> None:
 个人网站不是一次完成的作品，而是一套会暴露真实习惯的工具。你愿不愿意持续使用它，比第一次打开时有多惊艳更重要。
 
 Orange 还会继续变化，但判断标准会保持简单：它是否让我更容易写下、整理和重新找到真正重要的东西。""",
-                "建站,产品,Flask,写作系统",
                 "技术",
             ),
             (
@@ -533,7 +569,6 @@ Orange 采用了更直接的方式：公开网站只开放阅读页面，管理�
 ## 我更在意默认状态
 
 可靠系统往往依赖「默认就安全」，而不是要求每次操作都格外小心。公开入口默认看不到后台；启动器默认检查连接；部署默认保留数据库；这些小约束组合起来，比一条写在文档里的提醒更可靠。""",
-                "SSH,安全,Nginx,部署",
                 "技术",
             ),
             (
@@ -570,16 +605,15 @@ Orange 采用了更直接的方式：公开网站只开放阅读页面，管理�
 视觉风格当然重要，但它应该排在功能之后。Orange 的按钮按压、卡片层次和保存状态都很轻，因为它们的任务是确认、区分和引导，而不是证明页面会动。
 
 我越来越相信，成熟的交互设计不是不断增加效果，而是知道哪些瞬间值得被认真处理。""",
-                "设计,交互,动效,体验",
                 "设计",
             ),
         ]
         db.executemany(
             """
             INSERT OR IGNORE INTO posts
-            (title, slug, excerpt, content, tags, category, is_featured, views,
+            (title, slug, excerpt, content, category, is_featured, views,
              status, published_at, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'published', ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, 0, 0, 'published', ?, ?, ?)
             """,
             [(*item, created, created, created) for item in rich_posts],
         )
@@ -613,7 +647,7 @@ Orange 不是一次性展示页，而是一个可以持续写作和整理的个�
 
 - 文章、项目与片段的独立管理
 - Markdown 编辑、预览和历史版本
-- 搜索、分类、标签、相关阅读与 RSS
+- 搜索、分类、相关阅读与 RSS
 - 媒体上传和内容统计
 - SSH 隧道保护的私人后台
 - 面向手机与桌面的响应式阅读体验
@@ -684,7 +718,6 @@ Orange 不是一次性展示页，而是一个可以持续写作和整理的个�
 库存只有 20 时，30 个失败请求不是异常，而是预期结果。真正的问题是：失败是否清楚、是否回滚完整、是否留下半完成订单，以及用户能否理解下一步。
 
 并发正确性不等于所有人都成功。它意味着在不可能全部成功时，系统仍然以可解释、可恢复的方式拒绝一部分请求。""",
-                "数据库,并发,事务,测试",
                 "工程",
             ),
             (
@@ -736,7 +769,6 @@ Orange 不是一次性展示页，而是一个可以持续写作和整理的个�
 - 后续建模仍需处理的未知组合。
 
 这些记录让“数据可用”不再是一句判断，而是一条可以追溯的证据链。模型从这里开始，而不是从求解器开始。""",
-                "数学建模,数据审计,预处理,证据链",
                 "研究",
             ),
             (
@@ -785,16 +817,15 @@ CSV 使用 UTF-8 编码，在程序之间通常没有问题；但直接双击用
 一个数据产物不仅要“能被代码读取”，还应该让下一位使用者知道它是什么、从哪里来、做过哪些处理、还有哪些限制。
 
 因此我会把 CSV、质量报告和处理说明一起交付。字段语言、编码、文件命名和验证记录看起来都是小事，但它们共同决定了结果能不能被放心地继续使用。""",
-                "数据处理,中文表头,Excel,工程",
                 "方法",
             ),
         ]
         db.executemany(
             """
             INSERT OR IGNORE INTO posts
-            (title, slug, excerpt, content, tags, category, is_featured, views,
+            (title, slug, excerpt, content, category, is_featured, views,
              status, published_at, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'published', ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, 0, 0, 'published', ?, ?, ?)
             """,
             [(*item, created, created, created) for item in method_posts],
         )
@@ -899,7 +930,7 @@ def ensure_schema() -> None:
 @app.before_request
 def public_read_budget():
     endpoints={'home','articles','post_detail','archive','projects','project_detail','garden',
-               'uses','colophon','about','toolbox','toolbox_download','theme_taxonomy','theme_tag','theme_category',
+               'uses','colophon','about','toolbox','toolbox_download','theme_taxonomy','theme_category',
                'theme_archives','theme_search_index','study_notes','study_note','feed','sitemap','reader.comments','reader.comment_replies',
                'reader.project_comments','reader.project_comment_replies','reader.reader_session','reader.login','reader.register','profile.account','profile.avatar'}
     if request.method not in {'GET','HEAD'} or request.endpoint not in endpoints:
@@ -954,7 +985,7 @@ TRASH_TYPES = {
         "table": "posts",
         "title": "title",
         "columns": [
-            "id", "title", "slug", "excerpt", "content", "tags", "category",
+            "id", "title", "slug", "excerpt", "content", "category",
             "is_featured", "views", "status", "published_at", "created_at", "updated_at", "content_format", "cover_image", "cover_position",
         ],
     },
@@ -1011,6 +1042,7 @@ def move_content_to_trash(item_type: str, selected: list[int]) -> int:
     for row in rows:
         payload = dict(row)
         if item_type == "post":
+            payload.pop("tags", None)
             payload["__community"] = snapshot_post_community(db, row["id"])
             payload["__revisions"] = [
                 dict(item)
@@ -1140,8 +1172,9 @@ def normalize_slug(value: str) -> str:
     return slug or f"post-{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
 
-def split_tags(value: str) -> list[str]:
-    return [tag.strip() for tag in re.split(r"[,，]", value or "") if tag.strip()]
+@app.template_filter("comma_list")
+def split_comma_list(value: str) -> list[str]:
+    return [item.strip() for item in re.split(r"[,，]", value or "") if item.strip()]
 
 
 def plain_excerpt(content: str, limit: int = 120) -> str:
@@ -1231,11 +1264,6 @@ def date_time_zh(value: str) -> str:
         return parsed.strftime("%Y.%m.%d %H:%M")
     except (ValueError, TypeError):
         return (value or "")[:16]
-
-
-@app.template_filter("tags_list")
-def tags_list(value: str) -> list[str]:
-    return split_tags(value)
 
 
 @app.template_filter("reading_time")
@@ -1539,17 +1567,12 @@ def listing_window(total):
 def home():
     track_pageview("/")
     query = request.args.get("q", "").strip()
-    active_tag = request.args.get("tag", "").strip()
     active_category = request.args.get("category", "").strip()
     where = ["status = 'published'"]
     params: list[str] = []
     if query:
-        where.append("(title LIKE ? OR excerpt LIKE ? OR content LIKE ? OR tags LIKE ?)")
-        wildcard = f"%{query}%"
-        params.extend([wildcard] * 4)
-    if active_tag:
-        where.append("tags LIKE ?")
-        params.append(f"%{active_tag}%")
+        where.append("(title LIKE ? OR excerpt LIKE ? OR content LIKE ?)")
+        params.extend([f"%{query}%"] * 3)
     if active_category:
         where.append("category = ?")
         params.append(active_category)
@@ -1559,42 +1582,39 @@ def home():
     if query:
         project_where.append("(title LIKE ? OR summary LIKE ? OR content LIKE ? OR stack LIKE ?)")
         project_params.extend([f"%{query}%"] * 4)
-    if active_tag:
-        project_where.append("stack LIKE ?")
-        project_params.append(f"%{active_tag}%")
     if active_category:
         project_where.append("0")
     post_condition = ' AND '.join(where)
     project_condition = ' AND '.join(project_where)
-    include_study_notes = not (query or active_tag or active_category)
-    listing_params = (*params, *project_params, include_study_notes)
+    include_study_notes = not (query or active_category)
+    # The initial collection stays in the notes archive. New notes join the homepage feed.
+    note_condition = f"? AND NOT ({STUDY_NOTE_COLLECTION_MEMBERS})"
+    listing_params = (*params, *project_params, include_study_notes, *STUDY_NOTE_COLLECTION_SLUGS)
     matching = get_db().execute(
         f"""SELECT (SELECT COUNT(*) FROM posts WHERE {post_condition})
                  + (SELECT COUNT(*) FROM projects WHERE {project_condition})
-                 + (SELECT COUNT(*) FROM study_notes WHERE ?)""",
+                 + (SELECT COUNT(*) FROM study_notes WHERE {note_condition})""",
         listing_params,
     ).fetchone()[0]
     page,pages=listing_window(matching)
     posts = get_db().execute(
-        f"""SELECT id,title,slug,excerpt,content,tags,category,is_featured,views,
+        f"""SELECT id,title,slug,excerpt,content,category,is_featured,views,
                    published_at,created_at,updated_at,'post' AS entry_type,0 AS sort_order,cover_image,cover_position
             FROM posts WHERE {post_condition}
             UNION ALL
-            SELECT id,title,slug,summary AS excerpt,content,stack AS tags,'项目' AS category,
-                   is_featured,0 AS views,created_at AS published_at,created_at,updated_at,
-                   'project' AS entry_type,sort_order,'' AS cover_image,'50% 50%' AS cover_position
+            SELECT id,title,slug,summary,content,'项目',is_featured,0,created_at,created_at,updated_at,
+                   'project',sort_order,'','50% 50%'
             FROM projects WHERE {project_condition}
             UNION ALL
-            SELECT rowid AS id,title,slug,summary AS excerpt,'' AS content,'' AS tags,topic AS category,
-                   0 AS is_featured,0 AS views,created_at AS published_at,created_at,created_at AS updated_at,
-                   'study_note' AS entry_type,0 AS sort_order,'' AS cover_image,'50% 50%' AS cover_position
-            FROM study_notes WHERE ?
+            SELECT rowid,title,slug,summary,'',topic,0,0,created_at,created_at,created_at,
+                   'study_note',0,'','50% 50%'
+            FROM study_notes WHERE {note_condition}
             ORDER BY is_featured DESC,published_at DESC,sort_order DESC,id DESC,entry_type
             LIMIT ? OFFSET ?""",
-        (*listing_params,10,(page-1)*10),
+        (*listing_params, 10, (page - 1) * 10),
     ).fetchall()
     all_posts = get_db().execute(
-        "SELECT id,title,slug,excerpt,tags,category,is_featured,views,published_at,created_at,updated_at FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC"
+        "SELECT id,title,slug,excerpt,category,is_featured,views,published_at,created_at,updated_at FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC"
     ).fetchall()
     categories = get_db().execute(
         """
@@ -1602,10 +1622,6 @@ def home():
         WHERE status = 'published' GROUP BY category ORDER BY count DESC, category
         """
     ).fetchall()
-    tag_counts: dict[str, int] = {}
-    for item in all_posts:
-        for tag in split_tags(item["tags"]):
-            tag_counts[tag] = tag_counts.get(tag, 0) + 1
     featured = next((item for item in all_posts if item["is_featured"]), all_posts[0] if all_posts else None)
     filtered_posts = [item for item in posts if not featured or item["id"] != featured["id"]]
     recent_notes = get_db().execute(
@@ -1646,12 +1662,10 @@ def home():
         "home.html",
         posts=posts,
         listing_page=page,listing_pages=pages,
-        featured=featured if not (query or active_tag or active_category) else None,
+        featured=featured if not (query or active_category) else None,
         total_posts=len(all_posts),
         categories=categories,
-        tag_counts=sorted(tag_counts.items(), key=lambda item: (-item[1], item[0]))[:12],
         query=query,
-        active_tag=active_tag,
         active_category=active_category,
         recent_notes=recent_notes,
         featured_projects=featured_projects,
@@ -1672,17 +1686,12 @@ def home():
 def articles():
     track_pageview("/articles")
     query = request.args.get("q", "").strip()
-    active_tag = request.args.get("tag", "").strip()
     active_category = request.args.get("category", "").strip()
     where = ["status = 'published'"]
     params: list[str] = []
     if query:
-        where.append("(title LIKE ? OR excerpt LIKE ? OR content LIKE ? OR tags LIKE ?)")
-        wildcard = f"%{query}%"
-        params.extend([wildcard] * 4)
-    if active_tag:
-        where.append("tags LIKE ?")
-        params.append(f"%{active_tag}%")
+        where.append("(title LIKE ? OR excerpt LIKE ? OR content LIKE ?)")
+        params.extend([f"%{query}%"] * 3)
     if active_category:
         where.append("category = ?")
         params.append(active_category)
@@ -1697,13 +1706,6 @@ def articles():
         """,
         (*params,10,(page-1)*10),
     ).fetchall()
-    all_posts = get_db().execute(
-        """
-        SELECT tags FROM posts
-        WHERE status = 'published'
-        ORDER BY published_at DESC, id DESC
-        """
-    ).fetchall()
     categories = get_db().execute(
         """
         SELECT category, COUNT(*) AS count FROM posts
@@ -1712,22 +1714,13 @@ def articles():
         ORDER BY count DESC, category
         """
     ).fetchall()
-    tag_counts: dict[str, int] = {}
-    for item in all_posts:
-        for tag in split_tags(item["tags"]):
-            tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
     return render_template(
         "articles.html",
         posts=posts,
         listing_page=page,listing_pages=pages,
-        total_posts=len(all_posts),
         categories=categories,
-        tag_counts=sorted(
-            tag_counts.items(), key=lambda item: (-item[1], item[0])
-        )[:16],
         query=query,
-        active_tag=active_tag,
         active_category=active_category,
     )
 
@@ -1749,20 +1742,12 @@ def post_detail(slug: str):
         article_html = '<p>LaTeX 排版暂不可用，以下是文章源码。</p><pre><code>' + xml_escape(post['content']) + '</code></pre>'
         article_toc = ''
 
-    current_tags = set(split_tags(post["tags"]))
-    candidates = db.execute(
-        "SELECT id,title,slug,category,tags,published_at FROM posts WHERE status = 'published' AND id != ? ORDER BY published_at DESC",
-        (post["id"],),
+    related = db.execute(
+        """SELECT id, title, slug, category, published_at FROM posts
+           WHERE status = 'published' AND id != ?
+           ORDER BY (category = ?) DESC, published_at DESC, id DESC LIMIT 3""",
+        (post["id"], post["category"]),
     ).fetchall()
-    related = sorted(
-        candidates,
-        key=lambda item: (
-            int(item["category"] == post["category"]) * 3
-            + len(current_tags.intersection(split_tags(item["tags"]))),
-            item["published_at"],
-        ),
-        reverse=True,
-    )[:3]
     return render_template(
         "post.html", post=post, article_html=article_html, article_toc=article_toc, related=related,
         community=app.extensions["community"]["post_data"](post["id"])
@@ -1890,7 +1875,7 @@ def garden():
     track_pageview("/garden")
     db = get_db()
     posts = db.execute(
-        "SELECT title,slug,category,tags,published_at,content FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC"
+        "SELECT title,slug,category,published_at,content FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC"
     )
     projects_count = db.execute(
         "SELECT COUNT(*) AS n FROM projects WHERE is_visible = 1"
@@ -1899,17 +1884,13 @@ def garden():
         "SELECT COUNT(*) AS n FROM notes WHERE status = 'published'"
     ).fetchone()["n"]
     posts_by_category: dict[str, list[dict[str, object]]] = {}
-    tag_counts: dict[str, int] = {}
     for post in posts:
-        item = {key: post[key] for key in ('title','slug','category','tags','published_at')}
+        item = {key: post[key] for key in ('title','slug','category','published_at')}
         item['reading_minutes'] = reading_minutes(post['content'])
         posts_by_category.setdefault(post["category"], []).append(item)
-        for tag in split_tags(post["tags"]):
-            tag_counts[tag] = tag_counts.get(tag, 0) + 1
     return render_template(
         "garden.html",
         posts_by_category=posts_by_category,
-        tag_counts=sorted(tag_counts.items(), key=lambda item: (-item[1], item[0])),
         recent_activity=get_recent_activity(10),
         stats={
             "posts": sum(len(items) for items in posts_by_category.values()),
@@ -1925,7 +1906,7 @@ def uses():
     track_pageview("/uses")
     return render_template(
         "uses.html",
-        skills=split_tags(get_settings().get("skills", "")),
+        skills=split_comma_list(get_settings().get("skills", "")),
     )
 
 
@@ -1972,17 +1953,31 @@ def toolbox_download(slug: str):
 def study_notes():
     track_pageview("/study-notes")
     topic = request.args.get("topic", "").strip()
+    collection = request.args.get("collection") or None
+    if collection and collection != STUDY_NOTE_COLLECTION:
+        abort(404)
+
+    scope = ""
+    params = ()
+    if collection:
+        scope = f" WHERE {STUDY_NOTE_COLLECTION_MEMBERS}"
+        params = STUDY_NOTE_COLLECTION_SLUGS
+
     db = get_db()
-    topics = [row["topic"] for row in db.execute("SELECT DISTINCT topic FROM study_notes ORDER BY topic")]
-    query = "SELECT slug, title, topic, summary, page_count FROM study_notes"
+    topics = [row["topic"] for row in db.execute(
+        f"SELECT DISTINCT topic FROM study_notes{scope} ORDER BY topic", params,
+    )]
+    query = f"SELECT slug, title, topic, summary, page_count FROM study_notes{scope}"
     if topic:
-        query += " WHERE topic = ?"
-    visible_notes = db.execute(
-        query + " ORDER BY created_at DESC, slug DESC", (topic,) if topic else (),
-    ).fetchall()
+        query += (" AND " if scope else " WHERE ") + "topic = ?"
+        params = (*params, topic)
+    visible_notes = db.execute(query + " ORDER BY created_at DESC, slug DESC", params).fetchall()
+    visible_notes.sort(key=lambda note: STUDY_NOTE_COLLECTION_ORDER.get(note["slug"], -1))
     return render_template(
         "study_notes.html", notes=visible_notes, topics=topics, active_topic=topic,
+        collection=collection, collection_title=STUDY_NOTE_COLLECTION_TITLE if collection else None,
     )
+
 
 
 @app.get("/study-notes/<slug>")
@@ -2210,8 +2205,8 @@ def admin_dashboard():
         where.append("status = ?")
         params.append(status_filter)
     if query:
-        where.append("(title LIKE ? OR tags LIKE ? OR category LIKE ?)")
-        params.extend([f"%{query}%"] * 3)
+        where.append("(title LIKE ? OR category LIKE ?)")
+        params.extend([f"%{query}%"] * 2)
     sql = "SELECT * FROM posts"
     if where:
         sql += " WHERE " + " AND ".join(where)
@@ -2430,7 +2425,6 @@ def save_post(post_id: int | None = None):
     excerpt = request.form.get("excerpt", "").strip()
     content = request.form.get("content", "")
     content_format = request.form.get('content_format', 'markdown')
-    tags = ",".join(split_tags(request.form.get("tags", "")))
     category = request.form.get("category", "").strip() or "随笔"
     status = "published" if request.form.get("status") == "published" else "draft"
     is_featured = 1 if request.form.get("is_featured") == "1" else 0
@@ -2479,11 +2473,11 @@ def save_post(post_id: int | None = None):
             db.execute(
                 """
                 INSERT INTO posts
-                (title, slug, excerpt, content, content_format, tags, category, is_featured, views,
+                (title, slug, excerpt, content, content_format, category, is_featured, views,
                  status, published_at, created_at, updated_at, cover_image, cover_position)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
                 """,
-                (title, slug, excerpt, content, content_format, tags, category, is_featured,
+                (title, slug, excerpt, content, content_format, category, is_featured,
                  status, published_at, timestamp, timestamp, cover_image, position),
             )
             post_id = db.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
@@ -2507,11 +2501,11 @@ def save_post(post_id: int | None = None):
                 published_at = timestamp
             db.execute(
                 """
-                UPDATE posts SET title=?, slug=?, excerpt=?, content=?, content_format=?, tags=?,
+                UPDATE posts SET title=?, slug=?, excerpt=?, content=?, content_format=?,
                     category=?, is_featured=?, status=?, published_at=?, updated_at=?, cover_image=?, cover_position=?
                 WHERE id=?
                 """,
-                (title, slug, excerpt, content, content_format, tags, category, is_featured,
+                (title, slug, excerpt, content, content_format, category, is_featured,
                  status, published_at, timestamp, cover_image, position, post_id),
             )
         if is_featured:
@@ -2588,7 +2582,6 @@ def admin_preview():
         cover_image=cover_image,
         cover_position=position,
         content_format=content_format,
-        tags=request.form.get("tags", ""),
         category=request.form.get("category", "").strip() or "随笔",
         published_at=preview_time,
         created_at=preview_time,
@@ -2645,7 +2638,7 @@ def save_project(project_id: int | None = None):
             latex_bundle(content)
         except LatexRenderError as error:
             return fail(str(error) + " 可关闭公开展示后保存源码。")
-    stack = ",".join(split_tags(request.form.get("stack", "")))
+    stack = ",".join(split_comma_list(request.form.get("stack", "")))
     status = request.form.get("status", "building")
     if status not in {"idea", "building", "shipped"}:
         status = "building"
@@ -3220,27 +3213,22 @@ def theme_post_cover(post):
 def theme_context():
     if request.path.startswith("/admin") and request.endpoint not in {"admin_preview", "admin_project_preview"}:
         return {}
-    db = get_db()
-    rows = db.execute("SELECT category,tags FROM posts WHERE status='published'").fetchall()
-    return {"theme_stats": {"posts":len(rows), "categories":len({r["category"] for r in rows}), "tags":len({tag for r in rows for tag in split_tags(r["tags"])})}}
+    stats = get_db().execute(
+        """SELECT COUNT(*) AS posts, COUNT(DISTINCT category) AS categories,
+                  (SELECT COUNT(*) FROM study_notes) AS notes
+           FROM posts WHERE status = 'published'"""
+    ).fetchone()
+    return {"theme_stats": stats}
 
 
-@app.get("/tags")
 @app.get("/categories")
 def theme_taxonomy():
     track_pageview(request.path)
-    rows = get_db().execute("SELECT category,tags FROM posts WHERE status='published'").fetchall()
-    cats, tags = {}, {}
-    for row in rows:
-        cats[row["category"]] = cats.get(row["category"],0)+1
-        for tag in split_tags(row["tags"]):
-            tags[tag] = tags.get(tag,0)+1
-    return render_template("taxonomy.html",taxonomy=request.path.strip("/"),topic_tags=sorted(tags.items()),topic_categories=[{"category":k,"count":v} for k,v in sorted(cats.items())])
-
-
-@app.get("/tags/<path:tag>")
-def theme_tag(tag):
-    return redirect(url_for("articles",tag=tag))
+    categories = get_db().execute(
+        """SELECT category, COUNT(*) AS count FROM posts
+           WHERE status = 'published' GROUP BY category ORDER BY category"""
+    ).fetchall()
+    return render_template("taxonomy.html", topic_categories=categories)
 
 
 @app.get("/categories/<path:category>")

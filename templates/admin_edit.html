@@ -43,7 +43,6 @@
       <aside class="editor-side">
         <label>链接别名<input name="slug" value="{{ post.slug if post else '' }}" placeholder="my-first-post"><small>仅使用小写英文和数字</small></label>
         <label>分类<input name="category" value="{{ post.category if post else '' }}" placeholder="技术、研究、随笔"></label>
-        <label>标签<input name="tags" value="{{ post.tags if post else '' }}" placeholder="技术,随笔"><small>逗号分隔多个标签</small></label>
         <label>编辑格式<select name="content_format" data-content-format><option value="markdown" {% if not post or post.content_format|default('markdown') != 'latex' %}selected{% endif %}>Markdown</option><option value="latex" {% if post and post.content_format|default('markdown') == 'latex' %}selected{% endif %}>LaTeX 文章</option></select><small>切换格式不会自动改写正文</small></label>
         <label>状态<select name="status"><option value="draft" {% if not post or post.status != 'published' %}selected{% endif %}>保存为草稿</option><option value="published" {% if post and post.status == 'published' %}selected{% endif %}>立即发布</option></select></label>
         <label class="check-label"><input type="checkbox" name="is_featured" value="1" {% if post and post.is_featured %}checked{% endif %}><span><b>设为首页精选</b><small>会替换当前精选文章</small></span></label>

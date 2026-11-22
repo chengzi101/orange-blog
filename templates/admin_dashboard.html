@@ -24,7 +24,7 @@
     <article><span>累计阅读</span><strong>{{ stats.views }}</strong></article>
   </section>
   <form class="admin-filters" method="get">
-    <input name="q" value="{{ query }}" placeholder="搜索标题、分类或标签">
+    <input name="q" value="{{ query }}" placeholder="搜索标题或分类">
     <select name="status"><option value="">全部状态</option><option value="published" {% if status_filter == 'published' %}selected{% endif %}>已发布</option><option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>草稿</option></select>
     <button type="submit">筛选</button>{% if query or status_filter %}<a href="{{ url_for('admin_dashboard') }}">清除</a>{% endif %}
   </form>

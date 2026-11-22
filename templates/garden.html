@@ -24,7 +24,6 @@
       </article>
       {% endfor %}
     </div>
-    <div class="garden-tags"><p>INDEX / 标签索引</p><div>{% for tag, count in tag_counts %}<a href="{{ url_for('articles', tag=tag) }}"># {{ tag }} <small>{{ count }}</small></a>{% endfor %}</div></div>
   </section>
 
   <section class="section garden-activity">

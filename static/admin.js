@@ -209,7 +209,7 @@
       state.textContent = label;
     };
     const editor = trackedForm.matches('[data-editor-form]');
-    const fields = trackedForm.hasAttribute('data-project-editor') ? ['title', 'summary', 'content', 'slug', 'year', 'stack', 'status', 'link', 'sort_order', 'is_featured', 'is_visible', 'content_format'] : ['title', 'excerpt', 'content', 'slug', 'category', 'tags', 'status', 'is_featured', 'content_format', 'cover_image', 'cover_position'];
+    const fields = trackedForm.hasAttribute('data-project-editor') ? ['title', 'summary', 'content', 'slug', 'year', 'stack', 'status', 'link', 'sort_order', 'is_featured', 'is_visible', 'content_format'] : ['title', 'excerpt', 'content', 'slug', 'category', 'status', 'is_featured', 'content_format', 'cover_image', 'cover_position'];
     const snapshot = () => Object.fromEntries(fields.map(name => {
       const node = trackedForm.elements.namedItem(name);
       return [name, node?.type === 'checkbox' ? (node.checked ? '1' : '') : (node?.value || (name === 'content_format' ? 'markdown' : ''))];
@@ -264,6 +264,10 @@
           let saved;
           try { saved = JSON.parse(localStorage.getItem(key)); } catch { continue; }
           if (saved?.version !== 1 || !saved.fields || !Number.isFinite(saved.updatedAt)) continue;
+          if (!trackedForm.hasAttribute('data-project-editor') && Object.hasOwn(saved.fields, 'tags')) {
+            delete saved.fields.tags;
+            try { localStorage.setItem(key, JSON.stringify(saved)); } catch { /* The draft remains recoverable. */ }
+          }
           if (saved.fields.content_format === undefined) saved.fields.content_format = 'markdown';
           if (saved.fields.cover_position === undefined && fields.includes('cover_position')) saved.fields.cover_position = serverFields.cover_position;
           if (saved.fields.cover_image === undefined && fields.includes('cover_image')) saved.fields.cover_image = serverFields.cover_image;

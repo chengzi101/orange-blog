@@ -22,7 +22,7 @@
       <div class="admin-card-status"><span class="status {{ 'published' if project.is_visible else 'draft' }}">{{ '公开' if project.is_visible else '隐藏' }}</span><span>{{ project.status|project_status }}</span></div>
       <p>{{ project.year }} · 排序 {{ project.sort_order }}</p>
       <h2>{{ project.title }}</h2>
-      <div class="mini-tags">{% for item in project.stack|tags_list %}<span>{{ item }}</span>{% endfor %}</div>
+      <div class="mini-stack">{% for item in project.stack|comma_list %}<span>{{ item }}</span>{% endfor %}</div>
       <div class="post-actions">
         {% if project.is_visible %}<a href="{{ url_for('project_detail', slug=project.slug) }}" target="_blank">查看</a>{% endif %}
         <a href="{{ url_for('admin_project_edit', project_id=project.id) }}">编辑</a>

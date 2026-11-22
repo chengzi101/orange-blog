@@ -17,8 +17,8 @@
     <div class="section-heading"><p>SYSTEM MAP</p><h2>从写下到被读到</h2><span>05 层</span></div>
     <ol>
       <li><span>01</span><div><h3>写作层</h3><p>文章与项目使用不同编辑路径；支持草稿、预览、Markdown 和快捷保存。</p></div><b>CREATE</b></li>
-      <li><span>02</span><div><h3>内容层</h3><p>SQLite 保存正文、标签、分类、历史版本、媒体记录和网站资料。</p></div><b>STORE</b></li>
-      <li><span>03</span><div><h3>发现层</h3><p>搜索、主题地图、标签、相关阅读、时间归档和 RSS 帮助旧内容重新出现。</p></div><b>DISCOVER</b></li>
+      <li><span>02</span><div><h3>内容层</h3><p>SQLite 保存正文、分类、历史版本、媒体记录和网站资料。</p></div><b>STORE</b></li>
+      <li><span>03</span><div><h3>发现层</h3><p>搜索、主题地图、相关阅读、时间归档和 RSS 帮助旧内容重新出现。</p></div><b>DISCOVER</b></li>
       <li><span>04</span><div><h3>服务层</h3><p>Flask 处理页面与后台逻辑，Gunicorn 运行应用，Nginx 接收公开请求。</p></div><b>SERVE</b></li>
       <li><span>05</span><div><h3>安全层</h3><p>公网只开放阅读；后台通过本机私钥和 SSH 隧道进入，数据库在发布之间持续保留。</p></div><b>PROTECT</b></li>
     </ol>
