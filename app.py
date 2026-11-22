@@ -1634,15 +1634,15 @@ def home():
                 "latest": latest["title"] if latest else "",
             }
         )
-    latest_study_note = None
+    home_study_notes = []
     if page == 1 and not (query or active_tag or active_category):
-        latest_study_note = get_db().execute(
-            "SELECT slug, title, topic FROM study_notes ORDER BY created_at DESC, slug DESC LIMIT 1"
-        ).fetchone()
+        home_study_notes = get_db().execute(
+            "SELECT slug, title, topic FROM study_notes ORDER BY created_at DESC, rowid DESC"
+        ).fetchall()
     return render_template(
         "home.html",
         posts=posts,
-        latest_study_note=latest_study_note,
+        home_study_notes=home_study_notes,
         listing_page=page,listing_pages=pages,
         featured=featured if not (query or active_tag or active_category) else None,
         total_posts=len(all_posts),

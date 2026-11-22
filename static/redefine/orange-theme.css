@@ -242,27 +242,49 @@ html.dark .orange-project-card{background:rgba(26,36,52,.94);border-color:rgba(1
 .orange-home #main-content {
   scroll-margin-top: 76px;
 }
-.latest-study-note {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 20px;
+.home-study-notes {
   margin-bottom: 20px;
   padding: 14px 20px;
 }
-.latest-study-note-entry {
+.home-study-notes-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding-bottom: 10px;
+}
+.home-study-notes-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+.home-study-notes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.home-study-notes-list li {
+  border-top: 1px solid var(--border-color);
+}
+.home-study-note {
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 0;
+  padding: 10px 0;
   color: inherit;
 }
-.latest-study-note h2 {
+.home-study-notes-list li:last-child .home-study-note {
+  padding-bottom: 0;
+}
+.home-study-note h3 {
   margin: 2px 0 0;
   font-size: 1.15rem;
   font-weight: 650;
   line-height: 1.4;
+}
+.home-study-note:hover h3 {
+  text-decoration: underline;
 }
 .study-note-cover {
   display: block;
@@ -275,25 +297,25 @@ html.dark .orange-project-card{background:rgba(26,36,52,.94);border-color:rgba(1
   border: 1px solid var(--border-color);
   border-radius: 8px;
 }
-.latest-study-note .study-note-cover {
+.home-study-note .study-note-cover {
   width: 46px;
   height: 58px;
 }
 .study-note-meta,
-.latest-study-note .study-note-meta {
+.home-study-note .study-note-meta {
   margin: 0;
   color: var(--third-text-color);
   font-size: .875rem;
   line-height: 1.5;
 }
-.latest-study-note-all,
+.home-study-notes-all,
 .study-note-back,
 .study-note-zoom {
   font-size: .9rem;
   font-weight: 600;
   color: var(--second-text-color);
 }
-.latest-study-note-all:hover,
+.home-study-notes-all:hover,
 .study-note-back:hover,
 .study-note-scan:hover .study-note-zoom {
   color: var(--primary-color);
@@ -443,7 +465,7 @@ html.dark .orange-project-card{background:rgba(26,36,52,.94);border-color:rgba(1
 .study-note-preview-scroll.is-zoomed img {
   width: min(170%, var(--scan-width));
 }
-:is(.latest-study-note a, .study-note-filters a, .study-note-card-link, .study-note-back, .study-note-scan):focus-visible {
+:is(.home-study-notes a, .study-note-filters a, .study-note-card-link, .study-note-back, .study-note-scan):focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 4px;
 }
@@ -462,7 +484,7 @@ html.dark .orange-project-card{background:rgba(26,36,52,.94);border-color:rgba(1
   }
 }
 @media (max-width: 600px) {
-  .latest-study-note { padding: 12px 14px; }
+  .home-study-notes { padding: 12px 14px; }
   .study-notes-index > .page-template-container,
   .study-note-reader > .page-template-container {
     margin-top: 12px;
