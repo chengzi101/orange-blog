@@ -1,1 +1,57 @@
-{% from "_project_cover.html" import project_cover %}{% for post in listing %}{% set is_project=post.entry_type|default('post') == 'project' %}{% set detail_url=url_for('project_detail' if is_project else 'post_detail',slug=post.slug) %}<li class="home-article-item">{% set cover=project_cover(post) if is_project else post|post_cover %}{% if cover %}<div class="home-article-thumbnail relative h-[150px] overflow-hidden rounded-t-large"><a href="{{ detail_url }}"><img src="{{ cover }}" alt="" class="w-full h-full object-cover" style="object-position:{{ '50% 45%' if is_project else post|cover_position }}" loading="lazy"></a></div>{% endif %}<div class="flex flex-col gap-5 px-7 pb-7 pt-5"><h3 class="home-article-title"><a href="{{ detail_url }}">{{ post.title }}</a></h3><div class="home-article-content markdown-body"><p>{{ post.excerpt }}</p></div><div class="home-article-meta-info-container"><div class="home-article-meta-info"><span><i class="fa-solid fa-calendars"></i> <span class="home-article-date">{{ post.published_at|date_zh }}</span></span><span class="home-article-category"><i class="fa-solid fa-folders"></i><ul><li><a href="{{ url_for('projects') if is_project else url_for('articles',category=post.category) }}">{{ post.category }}</a></li></ul></span></div><div class="reader-card-actions">{% if not is_project %}<span class="reader-view-count" aria-label="{{ post.views }} 次浏览"><i class="fa-regular fa-eye" aria-hidden="true"></i> {{ post.views }} 次浏览</span>{% endif %}<a href="{{ detail_url }}">{{ '查看项目' if is_project else '阅读全文' }} <i class="fa-solid fa-angle-right"></i></a></div></div></div></li>{% else %}<li class="home-article-item"><div class="px-7 py-7"><h3 class="home-article-title">还没有公开内容</h3><p class="text-third-text-color">发布后的文章和公开项目会显示在这里。</p></div></li>{% endfor %}
+{% from "_project_cover.html" import project_cover %}
+{% for entry in listing %}
+  {% set entry_type = entry.entry_type|default('post') %}
+  {% set is_project = entry_type == 'project' %}
+  {% set is_study_note = entry_type == 'study_note' %}
+  {% if is_study_note %}
+    {% set detail_url = url_for('study_note', slug=entry.slug) %}
+    {% set category_url = url_for('study_notes', topic=entry.category) %}
+    {% set action_label = '阅读笔记' %}
+  {% elif is_project %}
+    {% set detail_url = url_for('project_detail', slug=entry.slug) %}
+    {% set category_url = url_for('projects') %}
+    {% set action_label = '查看项目' %}
+  {% else %}
+    {% set detail_url = url_for('post_detail', slug=entry.slug) %}
+    {% set category_url = url_for('articles', category=entry.category) %}
+    {% set action_label = '阅读全文' %}
+  {% endif %}
+  <li class="home-article-item{% if is_study_note %} home-article-study-note{% endif %}">
+    {% if not is_study_note %}
+      {% set cover = project_cover(entry) if is_project else entry|post_cover %}
+      {% if cover %}
+      <div class="home-article-thumbnail relative h-[150px] overflow-hidden rounded-t-large">
+        <a href="{{ detail_url }}"><img src="{{ cover }}" alt="" class="w-full h-full object-cover" style="object-position:{{ '50% 45%' if is_project else entry|cover_position }}" loading="lazy"></a>
+      </div>
+      {% endif %}
+    {% endif %}
+    <div class="flex flex-col gap-5 px-7 pb-7 pt-5">
+      <div class="flex items-center gap-4">
+        {% if is_study_note %}
+        <img class="study-note-cover" src="{{ url_for('study_note_asset', slug=entry.slug, filename='cover.webp') }}"
+             width="360" height="509" loading="lazy" decoding="async" alt="">
+        {% endif %}
+        <div class="min-w-0 flex flex-1 flex-col gap-5">
+          <h3 class="home-article-title"><a href="{{ detail_url }}">{{ entry.title }}</a></h3>
+          {% if entry.excerpt or not is_study_note %}
+          <div class="home-article-content markdown-body"><p>{{ entry.excerpt }}</p></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="home-article-meta-info-container">
+        <div class="home-article-meta-info">
+          <span><i class="fa-solid fa-calendars"></i> <span class="home-article-date">{{ entry.published_at|date_zh }}</span></span>
+          <span class="home-article-category"><i class="fa-solid fa-folders"></i><ul><li><a href="{{ category_url }}">{% if is_study_note %}笔记 · {% endif %}{{ entry.category }}</a></li></ul></span>
+        </div>
+        <div class="reader-card-actions">
+          {% if entry_type == 'post' %}
+          <span class="reader-view-count" aria-label="{{ entry.views }} 次浏览"><i class="fa-regular fa-eye" aria-hidden="true"></i> {{ entry.views }} 次浏览</span>
+          {% endif %}
+          <a href="{{ detail_url }}">{{ action_label }} <i class="fa-solid fa-angle-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </li>
+{% else %}
+  <li class="home-article-item"><div class="px-7 py-7"><h3 class="home-article-title">还没有公开内容</h3><p class="text-third-text-color">已发布的内容会显示在这里。</p></div></li>
+{% endfor %}

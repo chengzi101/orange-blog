@@ -1566,10 +1566,13 @@ def home():
         project_where.append("0")
     post_condition = ' AND '.join(where)
     project_condition = ' AND '.join(project_where)
+    include_study_notes = not (query or active_tag or active_category)
+    listing_params = (*params, *project_params, include_study_notes)
     matching = get_db().execute(
-        f"SELECT (SELECT COUNT(*) FROM posts WHERE {post_condition}) + "
-        f"(SELECT COUNT(*) FROM projects WHERE {project_condition})",
-        (*params, *project_params),
+        f"""SELECT (SELECT COUNT(*) FROM posts WHERE {post_condition})
+                 + (SELECT COUNT(*) FROM projects WHERE {project_condition})
+                 + (SELECT COUNT(*) FROM study_notes WHERE ?)""",
+        listing_params,
     ).fetchone()[0]
     page,pages=listing_window(matching)
     posts = get_db().execute(
@@ -1581,9 +1584,14 @@ def home():
                    is_featured,0 AS views,created_at AS published_at,created_at,updated_at,
                    'project' AS entry_type,sort_order,'' AS cover_image,'50% 50%' AS cover_position
             FROM projects WHERE {project_condition}
+            UNION ALL
+            SELECT rowid AS id,title,slug,summary AS excerpt,'' AS content,'' AS tags,topic AS category,
+                   0 AS is_featured,0 AS views,created_at AS published_at,created_at,created_at AS updated_at,
+                   'study_note' AS entry_type,0 AS sort_order,'' AS cover_image,'50% 50%' AS cover_position
+            FROM study_notes WHERE ?
             ORDER BY is_featured DESC,published_at DESC,sort_order DESC,id DESC,entry_type
             LIMIT ? OFFSET ?""",
-        (*params,*project_params,10,(page-1)*10),
+        (*listing_params,10,(page-1)*10),
     ).fetchall()
     all_posts = get_db().execute(
         "SELECT id,title,slug,excerpt,tags,category,is_featured,views,published_at,created_at,updated_at FROM posts WHERE status = 'published' ORDER BY published_at DESC, id DESC"
@@ -1634,15 +1642,9 @@ def home():
                 "latest": latest["title"] if latest else "",
             }
         )
-    home_study_notes = []
-    if page == 1 and not (query or active_tag or active_category):
-        home_study_notes = get_db().execute(
-            "SELECT slug, title, topic FROM study_notes ORDER BY created_at DESC, rowid DESC"
-        ).fetchall()
     return render_template(
         "home.html",
         posts=posts,
-        home_study_notes=home_study_notes,
         listing_page=page,listing_pages=pages,
         featured=featured if not (query or active_tag or active_category) else None,
         total_posts=len(all_posts),
