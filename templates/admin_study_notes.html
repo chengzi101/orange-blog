@@ -3,7 +3,7 @@
 {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='admin-study-notes.css', v=1) }}">{% endblock %}
 {% block body %}
 <main class="admin-main" id="admin-content">
-  <div class="dashboard-title"><h1>笔记</h1><a href="{{ url_for('study_notes') }}" target="_blank" rel="noopener">查看前台笔记 ↗</a></div>
+  <div class="dashboard-title"><h1>笔记</h1></div>
   <form class="settings-form" method="post" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <section>
