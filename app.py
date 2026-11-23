@@ -131,6 +131,10 @@ STUDY_NOTE_COLLECTION_SLUGS = (
 )
 STUDY_NOTE_COLLECTION_ORDER = {slug: index for index, slug in enumerate(STUDY_NOTE_COLLECTION_SLUGS)}
 STUDY_NOTE_COLLECTION_MEMBERS = "slug IN (" + ", ".join("?" for _ in STUDY_NOTE_COLLECTION_SLUGS) + ")"
+HOMEPAGE_HIDDEN_STUDY_NOTE_SLUGS = (
+    *STUDY_NOTE_COLLECTION_SLUGS,
+    "c-682874b5d4de9801",  # C++ 基础与面向对象
+)
 
 ALLOWED_UPLOADS = {"png", "jpg", "jpeg", "gif", "webp"}
 
@@ -1587,9 +1591,9 @@ def home():
     post_condition = ' AND '.join(where)
     project_condition = ' AND '.join(project_where)
     include_study_notes = not (query or active_category)
-    # The initial collection stays in the notes archive. New notes join the homepage feed.
-    note_condition = f"? AND NOT ({STUDY_NOTE_COLLECTION_MEMBERS})"
-    listing_params = (*params, *project_params, include_study_notes, *STUDY_NOTE_COLLECTION_SLUGS)
+    hidden_note_placeholders = ", ".join("?" for _ in HOMEPAGE_HIDDEN_STUDY_NOTE_SLUGS)
+    note_condition = f"? AND slug NOT IN ({hidden_note_placeholders})"
+    listing_params = (*params, *project_params, include_study_notes, *HOMEPAGE_HIDDEN_STUDY_NOTE_SLUGS)
     matching = get_db().execute(
         f"""SELECT (SELECT COUNT(*) FROM posts WHERE {post_condition})
                  + (SELECT COUNT(*) FROM projects WHERE {project_condition})
